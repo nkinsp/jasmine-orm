@@ -608,11 +608,19 @@ public interface Query<T> {
 	}
 	
 	default List<T> findList(int pageNo,int pageSize){
-		return execute(new PagingDbOperationAdapter<>(getDbContext(), this, getTableMapping().getTableClass(), pageNo, pageSize));
+		return findList(pageNo, pageSize, getTableMapping().getTableClass());
 	}
 	
+	default <En> List<En> findList(int pageNo,int pageSize,Class<En> enClass){
+		return execute(new PagingDbOperationAdapter<>(getDbContext(), this,enClass, pageNo, pageSize));
+	} 
+	
 	default Page<T> findPage(int pageNo,int pageSize){
-		return execute(new FindPageDbOperationAdapter<>(getDbContext(), this, getTableMapping().getTableClass(), pageNo, pageSize));
+		return findPage(pageNo, pageSize, getTableMapping().getTableClass());
+	}
+	
+	default <En> Page<En> findPage(int pageNo,int pageSize,Class<En> enClass){
+		return execute(new FindPageDbOperationAdapter<>(getDbContext(), this, enClass, pageNo, pageSize));
 	}
 	
 	default int delete() {
