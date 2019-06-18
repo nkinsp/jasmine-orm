@@ -21,6 +21,7 @@ import jasmine.orm.db.adapter.FindObjectListDbOperationAdapter;
 import jasmine.orm.db.adapter.FindPageDbOperationAdapter;
 import jasmine.orm.db.adapter.InsertBatchDbOperationAdapter;
 import jasmine.orm.db.adapter.InsertDbOperationAdapter;
+import jasmine.orm.db.adapter.PagingDbOperationAdapter;
 import jasmine.orm.db.adapter.UpdateBatchDbOperationAdapter;
 import jasmine.orm.db.adapter.UpdateDbOperationAdapter;
 import jasmine.orm.query.Query;
@@ -169,6 +170,8 @@ public interface DbRepository<M,Id> {
 		return findList(query->{});
 	}
 	
+	
+	
 	/**
 	 * 分页查询
 	 * @author hanjiang.Yue
@@ -178,10 +181,21 @@ public interface DbRepository<M,Id> {
 	 * @return
 	 */
 	default List<M> findList(Integer pageNo,Integer pageSize,Consumer<Query<M>> query){
-		Query<M> limitQuery = createQuery(query);
-		query.accept(limitQuery);
-		limitQuery.limit(pageNo, pageSize);
-		return findList(query);
+		return findList(pageNo, pageSize, modelClass(), query);
+	}
+	
+	/**
+	 * 分页查询
+	 * @param pageNo
+	 * @param pageSize
+	 * @return
+	 */
+	default List<M> findList(Integer pageNo,Integer pageSize){
+		return findList(pageNo, pageSize, modelClass(), query->{});
+	}
+	
+	default <En> List<En> findList(Integer pageNo,Integer pageSize,Class<En> enClass,Consumer<Query<M>> query){
+		return execute(new PagingDbOperationAdapter<>(dbContext(), createQuery(query), enClass, pageNo, pageSize));
 	}
 	
 	/**
@@ -347,7 +361,29 @@ public interface DbRepository<M,Id> {
 	 * @return
 	 */
 	default Page<M> findPage(Integer pageNo,Integer pageSize,Consumer<Query<M>> query){
-		return execute(new FindPageDbOperationAdapter<>(dbContext(), createQuery(query),modelClass(),pageNo,pageSize));
+		return findPage(pageNo, pageSize, modelClass(),query);
+	}
+	
+	/**
+	 * 分页查询
+	 * @param pageNo
+	 * @param pageSize
+	 * @return
+	 */
+	default Page<M> findPage(Integer pageNo,Integer pageSize){
+		return findPage(pageNo, pageSize, query->{}); 
+	}
+	
+	/**
+	 * 分页查询
+	 * @param pageNo
+	 * @param pageSize
+	 * @param entityClass
+	 * @param query
+	 * @return
+	 */
+	default <T> Page<T> findPage(Integer pageNo,Integer pageSize,Class<T> entityClass,Consumer<Query<M>> query){
+		return execute(new FindPageDbOperationAdapter<>(dbContext(), createQuery(query), entityClass, pageNo, pageSize));
 	}
 	
 	/**
