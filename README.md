@@ -9,7 +9,7 @@
 * **无xml** 没有xml文件 无需扫描
 * **快速启动**
 * **内置分页**
-* **内置缓存操作** HashMap ,J2CCache,Redis 等 可以自定义缓存
+* **内置缓存操作** HashMap ,J2ECache,Redis 等 可以自定义缓存
 
 # 快速开始
 
@@ -44,14 +44,14 @@ public class UserDao extends SpringJdbcTemplate<User, Integer>{
 #### 基础演示
 
 ```
-//查询 select id,name,age user where id = ? 
+//查询 select id,name,age from user where id = ? 
 User user = userDao.find(1);
 //条件查询 Lambda  模式
 user = userDao.find(query->query.idEq(1));
 user = userDao.find(query->query.where("id = ? ", 1));
 //条件查询 
 userDao.where().idEq(1).find();
-//查询 select id,name,age user where id in (?,?,?)
+//查询 select id,name,age from user where id in (?,?,?)
 List<User> users = userDao.where().idIn(1,2,3).findList();
 //更新
 userDao.update(user);
