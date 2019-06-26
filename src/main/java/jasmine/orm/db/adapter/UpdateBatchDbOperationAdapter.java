@@ -10,6 +10,9 @@ public class UpdateBatchDbOperationAdapter<T> extends AbstractDbOperationAdapter
 
 	public UpdateBatchDbOperationAdapter(DbContext dbContext, Query<T> query) {
 		super(dbContext, query);
+		if(tableMapping.isCache()) {
+			this.query.cache("",tableMapping.getCacheTime());
+		}
 	}
 
 	@Override
@@ -27,7 +30,9 @@ public class UpdateBatchDbOperationAdapter<T> extends AbstractDbOperationAdapter
 	public Object dbAdapter() {
 		List<Object[]> params = query.getArrayParams();
 		String updateSQL = query.getQueryBuilder().buildBatchUpdateSQL();
-		log.info("==> execute [sql={},params={}]",updateSQL,params);
+		if(log.isInfoEnabled()) {
+			log.info("==> execute [sql={},params={}]",updateSQL,params);
+		}
 		return dbOperation.batchUpdate(updateSQL,params);
 	}
 

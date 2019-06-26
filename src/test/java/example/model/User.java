@@ -2,42 +2,41 @@ package example.model;
 
 
 
-import org.springframework.cache.annotation.Cacheable;
-
-import jasmine.orm.activerecord.ConfigColumn;
-import jasmine.orm.activerecord.MapActiveRecord;
+import jasmine.orm.activerecord.ActiveRecord;
 import jasmine.orm.annotation.Table;
 
 @Table
-public class User extends MapActiveRecord<User, Integer>{
+public class User  extends ActiveRecord<User, Integer>{
 
 	
-	@Override
-	public void confingColumns(ConfigColumn config) {
-		
-		//config.a
+	private Integer id;
+	
+	private Integer age;
+	
+	private String name;
+
+	public Integer getId() {
+		return id;
 	}
-	
-	
-	public static final User DAO = new User();
-	
-	
-	public void  UserInfo (String id) {
-	
-		new User().delete(del->{
-			//del.where("", params)
-			del.cache();
-		});
+
+	public void setId(Integer id) {
+		this.id = id;
 	}
-	
-	
-	public static void main(String[] args) {
-		
-		
-	
-//		new User().find(1000).u
-		
+
+	public Integer getAge() {
+		return age;
 	}
-	
+
+	public void setAge(Integer age) {
+		this.age = age;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 	
 }

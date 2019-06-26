@@ -55,7 +55,9 @@ public abstract class AbstractDbOperationAdapter<T> implements DbOperationAdapte
 	public <R> R adapter() {
 		try {
 			if (query.isCache()) {
-				log.info("query cache ");
+				if(log.isInfoEnabled()) {
+					log.info("execute cache ");
+				}
 				return (R) cacheAdapter();
 			}
 			return (R) dbAdapter();
@@ -74,11 +76,6 @@ public abstract class AbstractDbOperationAdapter<T> implements DbOperationAdapte
 		this.dbOperation = context.getDbOperation();
 		this.query = query;
 		this.tableMapping = this.query.getTableMapping();
-		if(!this.query.isCache()) {
-			if(this.tableMapping.isCache()) {
-				this.query.cache(this.tableMapping.getCacheTime());
-			}
-		}
 	}
 
 

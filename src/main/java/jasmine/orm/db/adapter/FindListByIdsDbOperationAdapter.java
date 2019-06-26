@@ -1,5 +1,6 @@
 package jasmine.orm.db.adapter;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,8 +12,14 @@ import jasmine.orm.query.Query;
 
 public class FindListByIdsDbOperationAdapter<T> extends AbstractDbOperationAdapter<T> {
 
-	public  FindListByIdsDbOperationAdapter(DbContext dbContext, Query<T> query) {
+	private Object[] ids;
+	
+	public  FindListByIdsDbOperationAdapter(DbContext dbContext, Query<T> query,Object[] ids) {
 		super(dbContext, query);
+		this.ids = ids;
+		if(tableMapping.isCache()) {
+			this.query.cache(tableMapping.getCacheTime());
+		}
 	}
 	
 	private List<T> executeDbQuery(List<String> ids){
@@ -33,7 +40,7 @@ public class FindListByIdsDbOperationAdapter<T> extends AbstractDbOperationAdapt
 		
 		
 		//keys
-		Set<String> keys = query.getParams()
+		Set<String> keys =Arrays.asList(ids)
 				.stream()
 				.distinct()
 				.map(key->key.toString())

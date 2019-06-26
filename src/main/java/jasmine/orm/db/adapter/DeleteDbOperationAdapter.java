@@ -19,7 +19,9 @@ public class DeleteDbOperationAdapter<T> extends AbstractDbOperationAdapter<T>{
 	@Override
 	public Object dbAdapter() {
 		String sql = query.getQueryBuilder().buildDeleteSQL();
-		log.info("==> execute DELETE [sql={},params={}]",sql,query.getParams());
+		if(log.isInfoEnabled()) {
+			log.info("==> execute DELETE [sql={},params={}]",sql,query.getParams());
+		}
 		return  dbOperation.update(sql, query.getParams().toArray());
 	}
 

@@ -43,7 +43,9 @@ public class FindBeanListDbOperationAdapter<T,En> extends AbstractDbOperationAda
 	@Override
 	public Object dbAdapter() {
 		String sql = builderQuerySql();
-		log.info("==> execute [sql={},params={}]",sql,query.getParams());
+		if(log.isInfoEnabled()) {
+			log.info("==> execute [sql={},params={}]",sql,query.getParams());
+		}
 		if(MapActiveRecord.class.isAssignableFrom(enClass)) {
 			return dbOperation.queryListMap(sql, query.getParams().toArray()).stream().map(map->{
 				MapActiveRecord activeRecord = (MapActiveRecord) ClassUtils.newInstance(enClass);

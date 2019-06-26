@@ -20,9 +20,10 @@ public class UpdateDbOperationAdapter<T> extends AbstractDbOperationAdapter<T>{
 	@Override
 	public Object dbAdapter() {
 		List<Object> params = query.getParams();
-//		params.addAll(query.getParams());
 		String sql = query.getQueryBuilder().buildUpdateSQL();
-		log.info("==> execute [sql={},params={}]",sql,params);
+		if(log.isInfoEnabled()) {
+			log.info("==> execute [sql={},params={}]",sql,params);
+		}
 		return dbOperation.update(sql,params.toArray());
 	}
 

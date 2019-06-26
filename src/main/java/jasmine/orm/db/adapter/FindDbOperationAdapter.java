@@ -6,10 +6,11 @@ import java.util.List;
 import jasmine.orm.code.DbContext;
 import jasmine.orm.query.Query;
 
-public class FindDbOperationAdapter<T> extends FindListByIdsDbOperationAdapter<T>{
+public class FindDbOperationAdapter<T,En> extends FindBeanListDbOperationAdapter<T,En>{
 
-	public FindDbOperationAdapter(DbContext dbContext, Query<T> query) {
-		super(dbContext, query);
+
+	public FindDbOperationAdapter(DbContext dbContext, Query<T> query, Class<En> enClass) {
+		super(dbContext, query, enClass);
 	}
 
 	@Override
@@ -24,9 +25,10 @@ public class FindDbOperationAdapter<T> extends FindListByIdsDbOperationAdapter<T
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Object dbAdapter() {
-		List<T> list = query(query);
+		List<En> list = (List<En>) super.dbAdapter();
 		if(list.size() > 0) {
 			return list.get(0);
 		}

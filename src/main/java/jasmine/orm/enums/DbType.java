@@ -6,5 +6,6 @@ public enum DbType {
 	SQLITE,
 	POSTGRE_SQL,
 	DB2, 
-	SQSERVER
+	SQSERVER,
+	H2
 }

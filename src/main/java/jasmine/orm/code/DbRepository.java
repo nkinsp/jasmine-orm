@@ -10,8 +10,11 @@ import java.util.function.Function;
 
 import jasmine.orm.db.DbOperationAdapter;
 import jasmine.orm.db.adapter.DeleteBatchDbOperationAdapter;
+import jasmine.orm.db.adapter.DeleteByIdDbOperationAdapter;
+import jasmine.orm.db.adapter.DeleteByIdsDbOperationAdapter;
 import jasmine.orm.db.adapter.DeleteDbOperationAdapter;
 import jasmine.orm.db.adapter.FindBeanListDbOperationAdapter;
+import jasmine.orm.db.adapter.FindByIdDbOperationAdapter;
 import jasmine.orm.db.adapter.FindDbOperationAdapter;
 import jasmine.orm.db.adapter.FindListByIdsDbOperationAdapter;
 import jasmine.orm.db.adapter.FindMapDbOperationAdapter;
@@ -24,6 +27,7 @@ import jasmine.orm.db.adapter.InsertDbOperationAdapter;
 import jasmine.orm.db.adapter.PagingDbOperationAdapter;
 import jasmine.orm.db.adapter.UpdateBatchDbOperationAdapter;
 import jasmine.orm.db.adapter.UpdateDbOperationAdapter;
+import jasmine.orm.db.adapter.UpdateEntityMapDbOperationAdapter;
 import jasmine.orm.query.Query;
 import jasmine.orm.result.Page;
 import jasmine.orm.table.TableMapping;
@@ -111,10 +115,7 @@ public interface DbRepository<M,Id> {
 	 * @return
 	 */
 	default M find(Id id) {
-		return execute(new FindDbOperationAdapter<M>(
-				dbContext(),
-				createQuery(q->q.where().idEq(id)))
-		);
+		return execute(new FindByIdDbOperationAdapter<>(dbContext(), createQuery(), modelClass(), id));
 	}
 	
 	/**
@@ -157,8 +158,7 @@ public interface DbRepository<M,Id> {
 		if(ids == null || ids.size() == 0) {
 			return Arrays.asList();
 		}
-		Query<M> query = createQuery(q->q.where().idIn(ids.toArray()));
-		return execute(new FindListByIdsDbOperationAdapter<M>(dbContext(), query));
+		return execute(new FindListByIdsDbOperationAdapter<M>(dbContext(), createQuery(),ids.toArray()));
 	}
 	
 	/**
@@ -205,7 +205,11 @@ public interface DbRepository<M,Id> {
 	 * @return
 	 */
 	default M find(Consumer<Query<M>> query) {
-		return execute(new FindDbOperationAdapter<>(dbContext(), createQuery(query)));
+		return execute(new FindDbOperationAdapter<>(dbContext(), createQuery(query),modelClass()));
+	}
+	
+	default <En> En find(Class<En> enClass,Consumer<Query<M>> query) {
+		return execute(new FindDbOperationAdapter<>(dbContext(), createQuery(query),enClass));
 	}
 	
 	default M find(Map<String, Object> queryMap) {
@@ -404,7 +408,7 @@ public interface DbRepository<M,Id> {
 	 * @return
 	 */
 	default int delete(Id id) {
-		return delete(q->q.where().idEq(id));
+		return execute(new DeleteByIdDbOperationAdapter<>(dbContext(),createQuery(),id));
 	}
 	
 	/**
@@ -418,8 +422,7 @@ public interface DbRepository<M,Id> {
 	}
 	
 	default int delete(List<Id> ids) {
-		Query<M> query = createQuery(q->q.where().idIn(ids.toArray()));
-		return execute(new DeleteBatchDbOperationAdapter<M>(dbContext(), query));
+		return execute(new DeleteByIdsDbOperationAdapter<>(dbContext(), createQuery(), ids.toArray()));
 	}
 	
 	
@@ -504,21 +507,7 @@ public interface DbRepository<M,Id> {
 	 * @return
 	 */
 	default int update(Map<String, Object> modelMap) {
-		return update(query->{
-			TableMapping<M> tm = query.getTableMapping();
-			String id = tm.getPrimaryKey();
-			 Object idValue = modelMap.get(id);
-			 if(StrUtils.isEmpty(idValue)) {
-				 throw new RuntimeException("not found "+modelMap+" id value");
-			 }
-			 //移除主键值
-			 modelMap.forEach((k,v)->{
-				 if(!k.equals(id)) {
-					 query.set(tm.getColumnName(k), v);
-				 }
-			 });
-			 query.where().idEq(idValue);
-		});
+		return execute(new UpdateEntityMapDbOperationAdapter<>(dbContext(), createQuery(), modelMap));
 	}
 	
 	/**

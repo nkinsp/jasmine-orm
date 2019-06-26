@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import jasmine.orm.code.DbContext;
@@ -19,6 +20,7 @@ import jasmine.orm.db.adapter.PagingDbOperationAdapter;
 import jasmine.orm.db.adapter.UpdateDbOperationAdapter;
 import jasmine.orm.result.Page;
 import jasmine.orm.table.TableMapping;
+import jasmine.orm.util.StrUtils;
 
 public interface Query<T> {
 
@@ -537,6 +539,40 @@ public interface Query<T> {
 		return and().between(field, start, end);
 	}
 	
+	default Query<T> isNull(String field){
+		return condition(field).condition(" is NULL ");
+	}
+	
+	default Query<T> isNotNull(String field){
+		return condition(field).condition(" is NOT NULL ");
+	}
+	
+	default Query<T> andIsNotNull(String field){
+		return and().isNotNull(field);
+	}
+	
+	default Query<T> andIsNull(String field){
+		return and().isNull(field);
+	}
+	
+	default Query<T> andThen(boolean eq,Consumer<Query<T>> query){
+		if(eq) {
+			and();
+			query.accept(this);
+		}
+		return this;
+	}
+
+	
+	default Query<T> andNotEmptyThen(Object value,Consumer<Query<T>> query){
+		if(!StrUtils.isEmpty(value)) {
+			and();
+			query.accept(this);
+		}
+		return this;
+	}
+	
+	
 	/**
 	 * 是否缓存
 	 * @author hanjiang.Yue
@@ -584,6 +620,18 @@ public interface Query<T> {
 		return this;
 	}
 	
+	default Query<T> or(String orStr){
+		return this.condition(" (")
+			   .condition(orStr)
+			   .condition(") ");
+	}
+	
+	default Query<T> or(Consumer<Query<T>> query){
+		condition("(");
+		query.accept(this);
+		condition(") ");
+		return this;
+	}
 	
 	List<Map<String, Field>> getFiledBatch();
 	
@@ -596,7 +644,11 @@ public interface Query<T> {
 	}
 	
 	default T find() {
-		return execute(new FindDbOperationAdapter<>(getDbContext(), this));
+		return find(getTableMapping().getTableClass());
+	}
+	
+	default <En> En find(Class<En> entityClass) {
+		return execute(new FindDbOperationAdapter<>(getDbContext(), this,entityClass));
 	}
 	
 	default List<T> findList() {

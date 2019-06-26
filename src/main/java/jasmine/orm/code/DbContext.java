@@ -23,6 +23,7 @@ import jasmine.orm.db.springjdbc.SpringJdbcDbOperation;
 import jasmine.orm.enums.DbType;
 import jasmine.orm.query.Query;
 import jasmine.orm.query.impl.DB2DialectQueryImpl;
+import jasmine.orm.query.impl.H2DialectQueryImpl;
 import jasmine.orm.query.impl.MySqlDialectQueryImpl;
 import jasmine.orm.query.impl.OracleDialectQueryImpl;
 import jasmine.orm.query.impl.PostgreDialectQueryImpl;
@@ -97,6 +98,9 @@ public class DbContext{
 		}
 		if(dbType == DbType.SQSERVER) {
 			return new SQLServerDialectQueryImpl<>(mapping, config);
+		}
+		if(dbType == DbType.H2) {
+			return new H2DialectQueryImpl<>(mapping, config);
 		}
 		return null;
 	}
@@ -210,6 +214,7 @@ public class DbContext{
 			dbTypeMap.put("jdbc:postgresql:", DbType.POSTGRE_SQL);
 			dbTypeMap.put("jdbc:db2:", DbType.DB2);
 			dbTypeMap.put("jdbc:sqlserver:", DbType.SQSERVER);
+			dbTypeMap.put("jdbc:h2:", DbType.H2);
 			for (Entry<String, DbType> en : dbTypeMap.entrySet()) {
 				if(url.startsWith(en.getKey())) {
 					return en.getValue();

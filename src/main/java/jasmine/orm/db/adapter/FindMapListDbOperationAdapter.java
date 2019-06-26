@@ -29,7 +29,9 @@ public class FindMapListDbOperationAdapter<T> extends AbstractDbOperationAdapter
 	@Override
 	public Object dbAdapter() {
 		String sql = query.getQueryBuilder().buildSelectSQL();
-		log.info("==> execute [sql={},params={}]",sql,query.getParams());
+		if(log.isInfoEnabled()) {
+			log.info("==> execute [sql={},params={}]",sql,query.getParams());
+		}
 		return dbOperation.queryListMap(sql, query.getParams().toArray());
 	}
 

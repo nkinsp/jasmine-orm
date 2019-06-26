@@ -15,8 +15,7 @@ public abstract class MapActiveRecord<M,Id> extends ActiveRecord<M, Id> implemen
 	public void confingColumns(ConfigColumn config) {
 		
 	}
-	
-	
+
 
 	@Override
 	public int size() {
