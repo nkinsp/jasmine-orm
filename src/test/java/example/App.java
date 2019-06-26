@@ -8,7 +8,6 @@ import example.dao.UserDao;
 import example.model.NUser;
 import example.model.User;
 import jasmine.orm.code.DbContext;
-import jasmine.orm.enums.DbType;
 import jasmine.orm.query.Query;
 
 public class App {
@@ -81,6 +80,5 @@ public class App {
 	}
 	
 	public static void main(String[] args) {
-		System.out.println(DbType.H2.name());
 	}
 }

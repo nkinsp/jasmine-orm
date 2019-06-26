@@ -20,7 +20,6 @@ import jasmine.orm.cache.DefaultCacheKeyGenerated;
 import jasmine.orm.cache.impl.SimpleHashMapCacheOperation;
 import jasmine.orm.db.DbOperation;
 import jasmine.orm.db.springjdbc.SpringJdbcDbOperation;
-import jasmine.orm.enums.DbType;
 import jasmine.orm.query.Query;
 import jasmine.orm.query.impl.DB2DialectQueryImpl;
 import jasmine.orm.query.impl.H2DialectQueryImpl;
@@ -72,37 +71,21 @@ public class DbContext{
 	
 	/**
 	 * 创建query 对象
+	 * 
 	 * @author hanjiang.Yue
 	 * @param dbType
 	 * @param tableClass
 	 * @param config
 	 * @return
 	 */
-	public static <M> Query<M> createQuery(Class<M> tableClass,DbConfig config) {
-		TableMapping<M> mapping = findTableMapping(tableClass);
-		DbType dbType = config.getDbType();
-		if(dbType == DbType.MYSQL) {
-			return new MySqlDialectQueryImpl<>(mapping,config);
+	@SuppressWarnings("unchecked")
+	public static <M> Query<M> createQuery(Class<M> tableClass, DbConfig config) {
+		try {
+			return (Query<M>) config.getDialectClass().getConstructor(TableMapping.class, DbConfig.class)
+					.newInstance(findTableMapping(tableClass), config);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
-	   if(dbType == DbType.SQLITE) {
-			return new SQLiteDialectQueryImpl<>(mapping,config);
-		}
-		if(dbType == DbType.POSTGRE_SQL) {
-			return new PostgreDialectQueryImpl<>(mapping,config);
-		}
-		if(dbType == DbType.ORACLE) {
-			return new OracleDialectQueryImpl<>(mapping,config);
-		}
-		if(dbType == DbType.DB2) {
-			return new DB2DialectQueryImpl<>(mapping, config);
-		}
-		if(dbType == DbType.SQSERVER) {
-			return new SQLServerDialectQueryImpl<>(mapping, config);
-		}
-		if(dbType == DbType.H2) {
-			return new H2DialectQueryImpl<>(mapping, config);
-		}
-		return null;
 	}
 	
 	public static <M> Query<M> createQuery(Class<M> tableClass,DbContext context) {
@@ -163,10 +146,7 @@ public class DbContext{
 
 	public DbContext(DbOperation dbOperation, CacheOperation cacheOperation, CacheKeyGenerated cacheKeyGenerated) {
 		this.config = new DbConfig(dbOperation,cacheOperation,cacheKeyGenerated);
-		this.config.setDbType(initDbType());
-		log.info("init load dbType {} :",this.config.getDbType().name());
-		//加载
-		log.info("init load activerecord DbContext");
+		this.config.setDialectClass(loadDbDialect());
 		ActiveRecord.init(this);
 	}
 	
@@ -174,15 +154,17 @@ public class DbContext{
 	public  <T,Id> DbRepository<T, Id> table(Class<T> tableClass){
 		return new DbRepository<T, Id>() {
 
+			@SuppressWarnings("unchecked")
+			private Class<Id> idClass = (Class<Id>) findTableMapping(tableClass).getIdClassType();
+			
 			@Override
 			public Class<T> modelClass() {
 				return tableClass;
 			}
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public Class<Id> idClass() {
-				return (Class<Id>) findTableMapping(tableClass).getIdClassType();
+				return idClass;
 			}
 			
 			@Override
@@ -198,37 +180,37 @@ public class DbContext{
 	}
 
 	/**
-	 * 加载数据库类型
+	 * 加载数据库类型 自动匹配
 	 * @author hanjiang.Yue
 	 */
-	public DbType initDbType() {
+	public Class<?> loadDbDialect() {
 		Connection connection = null;
 		try {
 			connection = this.config.getDbOperation().getDataSource().getConnection();
 			DatabaseMetaData metaData =connection.getMetaData();
 			String url = metaData.getURL().toLowerCase();
-			Map<String, DbType> dbTypeMap = new HashMap<>();
-			dbTypeMap.put("jdbc:mysql:", DbType.MYSQL);
-			dbTypeMap.put("jdbc:sqlite:", DbType.SQLITE);
-			dbTypeMap.put("jdbc:oracle:", DbType.ORACLE);
-			dbTypeMap.put("jdbc:postgresql:", DbType.POSTGRE_SQL);
-			dbTypeMap.put("jdbc:db2:", DbType.DB2);
-			dbTypeMap.put("jdbc:sqlserver:", DbType.SQSERVER);
-			dbTypeMap.put("jdbc:h2:", DbType.H2);
-			for (Entry<String, DbType> en : dbTypeMap.entrySet()) {
+			Map<String, Class<?>> dbTypeMap = new HashMap<>();
+			dbTypeMap.put("jdbc:mysql:",MySqlDialectQueryImpl.class );
+			dbTypeMap.put("jdbc:sqlite:", SQLiteDialectQueryImpl.class);
+			dbTypeMap.put("jdbc:oracle:",OracleDialectQueryImpl.class);
+			dbTypeMap.put("jdbc:postgresql:",PostgreDialectQueryImpl.class);
+			dbTypeMap.put("jdbc:db2:",DB2DialectQueryImpl.class);
+			dbTypeMap.put("jdbc:sqlserver:",SQLServerDialectQueryImpl.class);
+			dbTypeMap.put("jdbc:h2:", H2DialectQueryImpl.class);
+			for (Entry<String, Class<?>> en : dbTypeMap.entrySet()) {
 				if(url.startsWith(en.getKey())) {
 					return en.getValue();
 				}
 			}
-			throw new RuntimeException("No Match DB");
+			return null;
 		} catch (Exception e) {
-			throw new RuntimeException("init dbType Error", e);
+			throw new RuntimeException(e);
 		}finally {
 			if(connection != null) {
 				try {
 					connection.close();
 				} catch (SQLException e) {
-					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
 			}
 		}
@@ -242,6 +224,9 @@ public class DbContext{
 		this.config = config;
 	}
 	
+	public void setDialectClass(Class<?> dialectClass) {
+		this.config.setDialectClass(dialectClass);
+	}
 	
 	
 	

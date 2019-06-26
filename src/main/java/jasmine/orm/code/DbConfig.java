@@ -6,14 +6,9 @@ import jasmine.orm.cache.DefaultCacheKeyGenerated;
 import jasmine.orm.db.DbOperation;
 import jasmine.orm.db.pk.PrimaryKeyGenerated;
 import jasmine.orm.db.pk.generated.DefaultPrimaryKeyGenerated;
-import jasmine.orm.enums.DbType;
 
 public class DbConfig {
 
-	/**
-	 * 数据库类型 默认MySQL
-	 */
-	private DbType dbType;
 	/**
 	 * db 执行对象
 	 */
@@ -38,13 +33,11 @@ public class DbConfig {
 	 * oracle 自增id的名称
 	 */
 	private String oracleSequencesName;
-
+	
 	/**
-	 * @return the dbType
+	 * Dialect
 	 */
-	public DbType getDbType() {
-		return dbType;
-	}
+	private Class<?> dialectClass;
 
 	/**
 	 * @return the dbOperation
@@ -81,12 +74,6 @@ public class DbConfig {
 		return oracleSequencesName;
 	}
 
-	/**
-	 * @param dbType the dbType to set
-	 */
-	public void setDbType(DbType dbType) {
-		this.dbType = dbType;
-	}
 
 	/**
 	 * @param dbOperation the dbOperation to set
@@ -132,20 +119,20 @@ public class DbConfig {
 		this.primaryKeyGenerated = primaryKeyGenerated;
 	}
 
-	public DbConfig(DbType dbType, DbOperation dbOperation, CacheOperation cacheOperation,
-			CacheKeyGenerated cacheKeyGenerated) {
-		super();
-		this.dbType = dbType;
-		this.dbOperation = dbOperation;
-		this.cacheOperation = cacheOperation;
-		this.cacheKeyGenerated = cacheKeyGenerated;
-	}
 
 	public DbConfig(DbOperation dbOperation, CacheOperation cacheOperation, CacheKeyGenerated cacheKeyGenerated) {
 		super();
 		this.dbOperation = dbOperation;
 		this.cacheOperation = cacheOperation;
 		this.cacheKeyGenerated = cacheKeyGenerated;
+	}
+
+	public Class<?> getDialectClass() {
+		return dialectClass;
+	}
+
+	public void setDialectClass(Class<?> dialectClass) {
+		this.dialectClass = dialectClass;
 	}
 	
 	
