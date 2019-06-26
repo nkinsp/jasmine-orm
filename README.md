@@ -7,7 +7,7 @@
 * **支持主键自动生成** 支持多达 4 种主键策略（内含分布式唯一 ID 生成器 - Sequence），可自由配置，完美解决主键问题
 * **支持 ActiveRecord 模式** 支持 ActiveRecord 形式调用，实体类只需继承 Model 类即可进行强大的 CRUD 操作
 * **无xml** 没有xml文件 无需扫描
-* **快速启动**
+* **快速启动** 
 * **内置分页**
 * **内置缓存操作** HashMap ,J2ECache,Redis 等 可以自定义缓存
 
@@ -17,9 +17,9 @@
 
 ```
 @Bean
-	public DbContext dbContext(DataSource dataSource) {
-		return new DbContext(dataSource);
-	}
+public DbContext dbContext(DataSource dataSource) {
+	return new DbContext(dataSource);
+}
 ```
 
 #### 新建User 对象
@@ -33,7 +33,7 @@ public class User {
 }
 ```
 
-#### 通用的模板模式\`\`
+#### 通用的模板模式
 
 ```
 public class UserDao extends SpringJdbcTemplate<User, Integer>{
@@ -53,10 +53,22 @@ user = userDao.find(query->query.where("id = ? ", 1));
 userDao.where().idEq(1).find();
 //查询 select id,name,age from user where id in (?,?,?)
 List<User> users = userDao.where().idIn(1,2,3).findList();
+//分页查询
+userDao.findPage(1,10);
+//分页条件查询
+userDao.findPage(1,10,query->query.where().gt("age",20));
+//新增
+Integer id = userDao.save(new User(18,"tom"));
+//新增
+Map<String,Object> userMap = new HashMap<>();
+userMap.put("age",20);
+userMap.put("name","jack");
+Integer id = userDao.save(userMap);
 //更新
 userDao.update(user);
 //删除
 userDao.delete(1);
+//delete from user where id > 100
 userDao.where().gt("id",100).delete();
 ```
 
