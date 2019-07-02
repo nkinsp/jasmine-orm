@@ -24,7 +24,7 @@ public DbContext dbContext(DataSource dataSource) {
 
 #### 新建User 对象
 
-```
+```java
 @Table
 public class User {
 	private Integer id;
@@ -35,7 +35,7 @@ public class User {
 
 #### 通用的模板模式
 
-```
+```java
 public class UserDao extends SpringJdbcTemplate<User, Integer>{
 
 }
@@ -43,7 +43,7 @@ public class UserDao extends SpringJdbcTemplate<User, Integer>{
 
 #### 基础演示
 
-```
+```java
 //查询 select id,name,age from user where id = ? 
 User user = userDao.find(1);
 //条件查询 Lambda  模式
@@ -74,7 +74,7 @@ userDao.where().gt("id",100).delete();
 
 #### ActiveRecord 模式
 
-```
+```java
 @Table
 public class User  extends ActiveRecord<User, Integer>{
 	private Integer id;
@@ -86,7 +86,7 @@ public class User  extends ActiveRecord<User, Integer>{
 
 #### 示例
 
-```
+```java
 //查询
 User user = new User().find(1);
 List<User> findAll = new User().findAll();
@@ -104,24 +104,24 @@ new User().delete(1,2,3);
 
 #### 普通模式
 
-```
+```java
 @Autowired
 private DbContext dbContext;
 	
 public void test() {
-		//查询
-		dbContext.table(User.class).find(1);
-		dbContext.table(User.class).select("id,name").findList();
-		dbContext.table(User.class).where().idEq(1).find();
-		//更新
-		dbContext.table(User.class).update(user->{
-			user.set("age", 18).where().idEq(1);
-		});
-		//删除
-		dbContext.table(User.class).delete(1);
-		dbContext.table(User.class).delete(user->{
-			user.where().idIn(1,2,3);
-		});
+	//查询
+	dbContext.table(User.class).find(1);
+	dbContext.table(User.class).select("id,name").findList();
+	dbContext.table(User.class).where().idEq(1).find();
+	//更新
+	dbContext.table(User.class).update(user->{
+		user.set("age", 18).where().idEq(1);
+	});
+	//删除
+	dbContext.table(User.class).delete(1);
+	dbContext.table(User.class).delete(user->{
+		user.where().idIn(1,2,3);
+	});
 }
 ```
 
