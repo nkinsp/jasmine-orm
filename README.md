@@ -7,121 +7,855 @@
 * **支持主键自动生成** 支持多达 4 种主键策略（内含分布式唯一 ID 生成器 - Sequence），可自由配置，完美解决主键问题
 * **支持 ActiveRecord 模式** 支持 ActiveRecord 形式调用，实体类只需继承 Model 类即可进行强大的 CRUD 操作
 * **无xml** 没有xml文件 无需扫描
-* **快速启动** 
+* **快速启动**
 * **内置分页**
 * **内置缓存操作** HashMap ,J2ECache,Redis 等 可以自定义缓存
 
 # 快速开始
 
-#### 在spring boot 中使用
+#### 使用方式
 
-```
+```java
 @Bean
-public DbContext dbContext(DataSource dataSource) {
+public DbContext dbContext( class=""DataSource dataSource) {
 	return new DbContext(dataSource);
 }
 ```
-
-#### 新建User 对象
-
-```java
-@Table
-public class User {
-	private Integer id;
-	private Integer age;
-	private String name;
-}
+#### 在spring mvc 中使用
+```xml
+<bean id="dbContext" class="jasmine.orm.code.DbContext">
+	<property name="dataSource" ref="dataSource"></property>
+</bean>
 ```
-
-#### 通用的模板模式
-
-```java
-public class UserDao extends SpringJdbcTemplate<User, Integer>{
+# CRUD操作
+#### 使用方式
+```
+@Repository
+public class UserRepository extends SpringJdbcTemplate<User, Integer>{
 
 }
+
 ```
-
-#### 基础演示
-
-```java
-//查询 select id,name,age from user where id = ? 
-User user = userDao.find(1);
-//条件查询 Lambda  模式
-user = userDao.find(query->query.idEq(1));
-user = userDao.find(query->query.where("id = ? ", 1));
-//条件查询 
-userDao.where().idEq(1).find();
-//查询 select id,name,age from user where id in (?,?,?)
-List<User> users = userDao.where().idIn(1,2,3).findList();
-//分页查询
-userDao.findPage(1,10);
-//分页条件查询
-userDao.findPage(1,10,query->query.where().gt("age",20));
-//新增
-Integer id = userDao.save(new User(18,"tom"));
-//新增
-Map<String,Object> userMap = new HashMap<>();
-userMap.put("age",20);
-userMap.put("name","jack");
-Integer id = userDao.save(userMap);
-//更新
-userDao.update(user);
-//删除
-userDao.delete(1);
-//delete from user where id > 100
-userDao.where().gt("id",100).delete();
+### ActiveRecord
 ```
-
-#### ActiveRecord 模式
-
-```java
 @Table
 public class User  extends ActiveRecord<User, Integer>{
-	private Integer id;
-	private Integer age;
-	private String name;
-
-}
-```
-
-#### 示例
-
-```java
-//查询
-User user = new User().find(1);
-List<User> findAll = new User().findAll();
-List<User> findList = new User().findList(1,2,3);
-//更新
-User update = new User();
-update.setId(100);
-update.setName("Jack");
-update.update();
-//删除 返回受影响行数
-new User().where().idEq(100).delete();
-new User().delete(100);
-new User().delete(1,2,3);
-```
-
-#### 普通模式
-
-```java
-@Autowired
-private DbContext dbContext;
 	
-public void test() {
-	//查询
-	dbContext.table(User.class).find(1);
-	dbContext.table(User.class).select("id,name").findList();
-	dbContext.table(User.class).where().idEq(1).find();
-	//更新
-	dbContext.table(User.class).update(user->{
-		user.set("age", 18).where().idEq(1);
-	});
-	//删除
-	dbContext.table(User.class).delete(1);
-	dbContext.table(User.class).delete(user->{
-		user.where().idIn(1,2,3);
-	});
+	private Integer id;
+	
+	private Integer age;
+	
+	private String name;
+	
+	//省略get set
+	
 }
+```
+### 直接使用
+```
+	@Autowired
+	private DbContext dbContext;
+	
+	public void test() {
+		
+		dbContext.table(User.class);
+	}
+```
+### 添加
+```
+/**
+* 批量添加
+* @param models 插入的实体列表 所有的实体 字段个数 要保持一致
+*/
+void save(List<M> models); 
+/**
+* 添加
+* @param model  实体对象
+* @return 返回主键id
+*/
+Id save(M model);
+/**
+* 添加
+* @param modelMap
+* @return
+*/
+Id save(Map<String, Object> modelMap)；    
+```
+### 修改
+```
+/**
+*更新数据
+*@param consumer lambda Query对象 
+*@return 受影响行数
+*/
+int update(Consumer<Query<M>> consumer);
+/**
+*批量更新数据
+*@params models 所有实体字段个数保持一致
+*/
+void update(List<M> models);
+/**
+*@params model 实体对象
+*@return 受影响行数
+*/
+int update(M model);
+/**
+*@params model Map 对象
+*@return 受影响行数
+*/
+int update(Map<String, Object> modelMap);
+```
+### 删除
+```
+/**
+* 条件删除
+* @param consumer lambda Query对象 
+* @return
+*/
+int delete(Consumer<Query<M>> consumer);
+
+/**
+* 通过主键删除
+* @param id
+* @return
+*/
+int delete(Id id);
+
+/**
+* 批量删除
+* @param ids
+* @return
+*/
+int delete(Id...ids);
+
+/**
+* 批量删除
+* @param ids
+* @return
+*/
+int delete(List<Id> ids);
+```
+### 查询
+```
+/**
+* 通过id获取
+* @param id
+* @return 实体对象
+*/
+M find(Id id);
+
+/**
+* 条件查询返回Map
+* @param consumer lambda Query对象 
+* @return Map
+*/
+Map<String, Object> findMap(Consumer<Query<M>> consumer)；
+
+/**
+* 条件查询返回多个Map对象
+* @param consumer lambda Query对象 
+* @return List<Map>
+*/
+List<Map<String, Object>> findMapList(Consumer<Query<M>> consumer);
+
+/**
+* 通过主键批量获取
+* @param ids
+* @return
+*/
+List<M> findList(Id...ids);
+
+/**
+* 通过主键批量获取
+* @param ids
+* @return
+*/
+List<M> findList(List<Id> ids);
+
+/**
+* 获取所有数据
+* @return
+*/
+List<M> findAll();
+
+/**
+* 分页查询
+* @param pageNo
+* @param pageSize
+* @param consumer lambda Query对象 
+* @return
+*/
+List<M> findList(Integer pageNo,Integer pageSize,Consumer<Query<M>> consumer);
+
+/**
+* 分页查询
+* @param pageNo
+* @param pageSize
+* @return
+*/
+List<M> findList(Integer pageNo,Integer pageSize);
+
+/**
+* 分页查询
+* @param pageNo
+* @param pageSize
+* @param enClass 返回实体对象的Class
+* @param consumer lambda Query对象 
+* @return
+*/
+<En> List<En> findList(Integer pageNo,Integer pageSize,Class<En> enClass,Consumer<Query<M>> consumer);
+
+/**
+* 条件查询 返回实体对象
+* @param  consumer lambda Query对象 
+* @return
+*/
+M find(Consumer<Query<M>> consumer);
+
+/**
+* 条件查询 返回实体对象
+* @param enClass 实体对象的class
+* @param query consumer  lambda Query对象 
+* @return
+*/
+<En> En find(Class<En> enClass,Consumer<Query<M>> consumer)；
+
+/**
+* 根据Map 生成条件  key=? and key=?
+* @param queryMap
+* @return
+*/
+M find(Map<String, Object> queryMap)；
+
+
+
+/**
+* 返回列表数据
+* @param consumer lambda Query对象 
+* @return
+*/
+List<M> fndList(Consumer<Query<M>> consumer);
+
+/**
+* 返回列表数据
+* @param enClass 实体对象的class
+* @param consumer lambda Query对象
+* @return
+*/
+<T> List<T> findList(Class<T> enClass,Consumer<Query<M>> consumer)；
+
+
+/**
+* 返回唯一数据
+* @param typeClass
+* @param query
+* @return
+*/
+<T> T findUnique(Class<T> typeClass,Consumer<Query<M>> consumer)；
+
+/**
+* 返回唯一的列表数据
+* @param typeClass
+* @param consumer
+* @return
+*/
+<T> List<T> findUniqueList(Class<T> typeClass,Consumer<Query<M>> consumer)；
+
+/**
+* 返回单个 Integer 对象
+* @param consumer
+* @return
+*/
+Integer findToInt(Consumer<Query<M>> consumer);
+
+/**
+* 返回单个 Long 对象
+* @param consumer
+* @return
+*/
+Long findToLong(Consumer<Query<M>> consumer)；
+
+/**
+* findCount
+* @param query
+* @return
+*/
+Integer findCount(Consumer<Query<M>> consumer)；
+
+/**
+* 返回单个 String 对象
+* @param consumer
+* @return
+*/
+String findToString(Consumer<Query<M>> consumer)；
+
+/**
+* 返回 List<String>
+* @param consumer
+* @return
+*/
+List<String> findStringList(Consumer<Query<M>> consumer)；
+
+/**
+* 返回 List<Integer>
+* @param consumer
+* @return
+*/
+List<Integer> findIntegerList(Consumer<Query<M>> consumer)；
+
+/**
+* 返回 List<Long>
+
+* @param consumer
+* @return
+*/
+List<Long> findLongList(Consumer<Query<M>> consumer)；
+
+/**
+* 返回 List<Double>
+* @param consumer
+* @return
+*/
+List<Double> findDoubleList(Consumer<Query<M>> consumer)；
+
+
+/**
+* 分页查询
+* @param pageNo
+* @param pageSize
+* @param consumer
+* @return
+*/
+Page<M> findPage(Integer pageNo,Integer pageSize,Consumer<Query<M>> consumer)；
+
+/**
+* 分页查询
+* @param pageNo
+* @param pageSize
+* @return
+*/
+Page<M> findPage(Integer pageNo,Integer pageSize)；
+
+/**
+* 分页查询
+* @param pageNo
+* @param pageSize
+* @param entityClass
+* @param consumer
+* @return
+*/
+<T> Page<T> findPage(Integer pageNo,Integer pageSize,Class<T> entityClass,Consumer<Query<M>> consumer)；
+```
+### 其他操作
+```
+/**
+* 添加或者更新
+
+* @param model
+* @return 主键id
+*/
+Id saveOrUpdate(M model);
+
+/**
+* 执行存储过程
+
+* @param call
+* @param callableStatementConsumer
+* @param resultSetFun
+* @return
+*/
+<T> T call(String call,Consumer<CallableStatement> callableStatementConsumer,Function<ResultSet,T> resultSetFun);
+
+/**
+* 执行sql 操作
+* @param sql
+* @param params
+* @return
+*/
+int execute(String sql,Object...params);
+
+/**
+* 执行查询
+* @param sql
+* @param fun
+* @param params
+* @return
+*/
+<T> List<T> executeQuery(String sql,Function<ResultSet, T> fun,Object...params);
+
+```
+
+# Query 对象 条件构造器
+```
+
+
+/**
+* 添加参数
+
+* @param param
+* @return
+*/
+Query<T> addParam(Object param);
+
+/**
+* 添加参数 
+
+* @param params
+* @return
+*/
+Query<T> addParams(Object...params);
+
+/**
+* AND 
+
+* @return
+*/
+Query<T> and();
+
+/**
+* AND condition ({sql })
+
+* @param sql
+* @param clasz 
+* @param consumer
+* @return
+*/
+<R> Query<T> and(String condition, Class<R> tableClass, Consumer<Query<R>> consumer);
+
+
+/**
+* AND condition ?
+
+* @param condition
+* @param params
+* @return
+*/
+Query<T> and(String condition, Object...params);
+
+/**
+* AND field = ? 
+
+* @param field
+* @param value
+* @return
+*/
+Query<T> andEq(String field, Object value);
+
+/**
+* AND field > ?
+
+* @param field
+* @param value
+* @return
+*/
+ Query<T> andGt(String field, Object value);
+
+/**
+* field > ?
+
+* @param field
+* @param value
+* @return
+*/
+ Query<T> gt(String field, Object value);
+
+/**
+* field >= ?
+
+* @param field
+* @param value
+* @return
+*/
+ Query<T> ge(String field,Object value);
+
+/**
+* AND field 
+
+* @param field
+* @param values
+* @return
+*/
+ Query<T> andIn(String field, Object[] values);
+
+
+/**
+* AND (conditions)
+
+* @param consumer
+* @return
+*/
+ Query<T> and(Consumer<Query<T>> consumer);
+
+
+
+/**
+* 
+
+* @param field
+* @param value
+* @return
+*/
+ Query<T> andLike(String field, Object value);
+
+/**
+* 
+
+* @param field
+* @param value
+* @return
+*/
+ Query<T> like(String field,Object value);
+
+/**
+* 
+
+* @param field
+* @param value
+* @return
+*/
+ Query<T> andLt(String field, Object value);
+
+/**
+* field < ?
+
+* @param field
+* @param value
+* @return
+*/
+ Query<T> lt(String field,Object value);
+
+/**
+* field <= ?
+
+* @param field
+* @param value
+* @return
+*/
+ Query<T> le(String field,Object value);
+
+/**
+* exists ()
+* @param sqlstr
+* @param params
+* @return
+*/
+ Query<T> exists(String sqlstr,Object...params);
+
+/**
+* exists
+* @param query
+* @return
+*/
+ <En> Query<T> exists(Query<En> query);
+
+/**
+* exists
+* @param tableClass
+* @param consumer
+* @return
+*/
+ <En> Query<T> exists(Class<En> tableClass,Consumer<Query<En>> consumer );
+
+ Query<T> not();
+
+/**
+* AND field NOT IN (?,?,?)
+
+* @param field
+* @param values
+* @return
+*/
+ Query<T> andNotIn(String field, Object...values);
+
+/**
+*  field not in (?,?,?) 
+
+* @param field
+* @param values
+* @return
+*/
+ Query<T> notIn(String field,Object...values);
+
+
+
+/**
+* field = ?
+
+* @param field
+* @param value
+* @return
+*/
+ Query<T> eq(String field, Object value);
+
+/**
+* field != ?
+* @param field
+* @param value
+* @return
+*/
+ Query<T> ne(String field,Object value);
+
+/**
+* and field != ? 
+* @param field
+* @param value
+* @return
+*/
+ Query<T> andNe(String field,Object value);
+
+/**
+* 获取参数
+* @return
+*/
+List<Object> getParams();
+
+ Query<T> group(String group);
+
+/**
+* id = ?
+
+* @param value
+* @return
+*/
+ Query<T> idEq(Object value);
+
+
+/**
+* field IN (?,?)
+
+* @param field
+* @param values
+* @return
+*/
+ Query<T> in(String field, Object...values)
+
+/**
+* in
+* @param field
+* @param tableClass
+* @param consumer
+* @return
+*/
+ <R> Query<T> in(String field,Class<R> tableClass,Consumer<Query<R>> consumer)
+
+
+ <R> Query<T> in(String field,Query<R> query);
+
+ <R> Query<T> andIn(String field,Class<R> tableClass,Consumer<Query<R>> query);
+
+ Query<T> innerjoin(Class<?> table, String condition);
+
+ Query<T> innerjoin(String table, String condition);
+ <R>  Query<T> leftjoin(String conditions);
+
+ <R> Query<T> leftjoin(Class<R> tableClass, String condition);
+
+
+ <R> Query<T> leftjoin(Class<R> tableClass,String asStr,String condition);
+
+ Query<T> leftjoin(String table, String condition);
+
+ Query<T> leftjoin(String table,String asStr,String condition);
+
+ Query<T> on(String condition);
+
+
+/**
+* Limit 默认分页
+
+* @param pageNo
+* @param pageSize
+* @return
+*/
+ Query<T> limit(int pageNo, int pageSize);
+
+
+/**
+* order by 
+
+* @param orderBy
+* @return
+*/
+ Query<T> order(String orderBy);
+
+ Query<T> rightjoin(Class<?> table, String condition);
+
+ Query<T> rightjoin(String table, String condition);
+
+  Query<T> join(Class<?>...tableClass);
+
+  Query<T> join(String...tables);
+
+/**
+* 查询的字段 
+
+* @param fields
+* @return
+*/
+Query<T> select(List<String> fields);
+
+/**
+* 查询的字段 
+
+* @param field
+* @return
+*/
+ Query<T> select(String field);
+
+/**
+
+* @param fields
+* @return
+*/
+ Query<T> select(String...fields);
+
+/**
+* 查询 
+
+* @param alias 别名
+* @param fields 字段名称
+* @return
+*/
+ Query<T> select(String alias,List<String> fields);
+
+/**
+* 不需要查询的列名
+
+* @param fields
+* @return
+*/
+Query<T> selectExcludes(String...fields);
+
+/**
+* 更新的字段
+
+* @param fields
+* @return
+*/
+Query<T> set(Map<String, Object> fields);
+
+/**
+* 更新字段
+
+* @param t
+* @return
+*/
+Query<T> set(T t);
+
+/**
+* 更新的字段
+
+* @param field
+* @param value
+* @return 
+*/
+Query<T> set(String field, Object value);
+
+/**
+* 更新字段 ex (set age = (age + ?) )  .. 1
+* @param field
+* @param sql
+* @param params
+* @return
+*/
+Query<T> setSQLStr(String field,String sql,Object...params);
+
+/**
+* 批量更新或者新增的数据
+
+* @param batch
+* @return
+*/
+Query<T> batch(List<Map<String, Object>> batch);
+
+/**
+*  Table AS alias
+
+* @param alias
+* @return
+*/
+ Query<T> alias(String alias);
+
+/**
+* 构建一个空的 where
+
+* @return
+*/
+Query<T> where();
+
+
+/**
+*  where 
+
+* @param condition
+* @param params
+* @return
+*/
+ Query<T> where(String condition, Object...params);
+
+<R> Query<T> where(String condition,Class<R> tableClass,Consumer<Query<R>> where);
+
+
+
+/**
+* where map
+
+* @param whereMap
+* @return
+*/
+ Query<T> where(Map<String, Object> whereMap);
+
+/**
+* id in (?,?,?)
+
+* @param ids
+* @return
+*/
+ Query<T> idIn(Object...ids);
+ <R> Query<T> idIn(Class<R> tableClass,Consumer<Query<R>> query);
+
+ Query<T> between(String field,Object start,Object end);
+
+ Query<T> andBetween(String field,Object start,Object end);
+ Query<T> isNull(String field);
+
+ Query<T> isNotNull(String field);
+ Query<T> andIsNotNull(String field);
+
+ Query<T> andIsNull(String field);
+
+ Query<T> andThen(boolean eq,Consumer<Query<T>> query);
+
+
+ Query<T> andNotEmptyThen(Object value,Consumer<Query<T>> query);
+
+/**
+* 是否缓存
+* @return
+*/
+boolean isCache();
+
+String  getCacheKey();
+
+String  getCacheKey(String value);
+
+long getCacheTime();
+
+ Query<T>  cache();
+
+Query<T>  cache(String key,long second);
+
+ Query<T>  cache(String key);
+
+
+ Query<T>  cache(long second);
+
+ Query<T> having(String having);
+
+ Query<T> count(String count);
+
+ Query<T> or(String orStr);
+
+ Query<T> or(Consumer<Query<T>> query);
 ```
 

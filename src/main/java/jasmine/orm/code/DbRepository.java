@@ -204,6 +204,14 @@ public interface DbRepository<M,Id> {
 		return findList(pageNo, pageSize, modelClass(), query->{});
 	}
 	
+	/**
+	 * 分页查询
+	 * @param pageNo
+	 * @param pageSize
+	 * @param enClass
+	 * @param query
+	 * @return
+	 */
 	default <En> List<En> findList(Integer pageNo,Integer pageSize,Class<En> enClass,Consumer<Query<M>> query){
 		return execute(new PagingDbOperationAdapter<>(dbContext(), createQuery(query), enClass, pageNo, pageSize));
 	}
@@ -218,10 +226,21 @@ public interface DbRepository<M,Id> {
 		return execute(new FindDbOperationAdapter<>(dbContext(), createQuery(query),modelClass()));
 	}
 	
+	/**
+	 * 
+	 * @param enClass
+	 * @param query
+	 * @return
+	 */
 	default <En> En find(Class<En> enClass,Consumer<Query<M>> query) {
 		return execute(new FindDbOperationAdapter<>(dbContext(), createQuery(query),enClass));
 	}
 	
+	/**
+	 * 
+	 * @param queryMap
+	 * @return
+	 */
 	default M find(Map<String, Object> queryMap) {
 		return find(query->{
 			query.where(queryMap);
@@ -439,16 +458,15 @@ public interface DbRepository<M,Id> {
 	
 	/**
 	 * 添加
-	 * @author hanjiang.Yue
-	 * @param model
-	 * @return
+	 * @param model  实体对象
+	 * @return 返回主键id
 	 */
 	default Id save(M model) {
 		return save(EntityUtils.entityToMap(model));
 	}
 	
 	/**
-	 * 保存
+	 * 添加
 	 * @param modelMap
 	 * @return
 	 */
@@ -459,8 +477,7 @@ public interface DbRepository<M,Id> {
 	
 	/**
 	 * 批量添加
-	 * @author hanjiang.Yue
-	 * @param models
+	 * @param models 插入的实体列表 所有的实体 字段个数 要保持一致
 	 */
 	default void save(List<M> models) {
 		 execute(
@@ -522,7 +539,7 @@ public interface DbRepository<M,Id> {
 	
 	
 	/**
-	 * 
+	 * 添加或者更新
 	 * @author hanjiang.Yue
 	 * @param model
 	 * @return
@@ -546,10 +563,23 @@ public interface DbRepository<M,Id> {
 		return createQuery().select(fields);
 	}
 	
+	/**
+	 * 执行sql 操作
+	 * @param sql
+	 * @param params
+	 * @return
+	 */
 	default int execute(String sql,Object...params) {
 		return db().update(sql, params);
 	}
 	
+	/**
+	 * 执行查询
+	 * @param sql
+	 * @param fun
+	 * @param params
+	 * @return
+	 */
 	default <T> List<T> executeQuery(String sql,Function<ResultSet, T> fun,Object...params) {
 		 return db().execute(sql, fun, params);
 	}
