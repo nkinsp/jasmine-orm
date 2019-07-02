@@ -83,14 +83,23 @@ public interface Query<T> {
 	}
 	
 	/**
-	 * AND 
+	 * AND condition ({sql })
 	 * @author hanjiang.Yue
 	 * @param sql
 	 * @param clasz 
 	 * @param consumer
 	 * @return
 	 */
-	 <R> Query<T> and(String condition, Class<R> tableClass, Consumer<Query<R>> consumer);
+	 default <R> Query<T> and(String condition, Class<R> tableClass, Consumer<Query<R>> consumer){
+		 Query<R> query = getDbContext().createQuery(tableClass);
+		 consumer.accept(query);
+		 return and().
+				      condition(condition).
+				      condition(" (").
+				      condition(query.getQueryBuilder().buildSelectSQL()).
+				      condition(") ").
+				      addParams(query.getParams());
+	 }
 	
 
 	 /**
@@ -135,6 +144,17 @@ public interface Query<T> {
 	 */
 	default Query<T> gt(String field, Object value){
 		return condition(field).condition(" > ? ").addParam(value);
+	}
+	
+	/**
+	 * field >= ?
+	 * @author hanjiang.Yue
+	 * @param field
+	 * @param value
+	 * @return
+	 */
+	default Query<T> ge(String field,Object value){
+		return condition(field).condition(" >= ? ").addParam(value);
 	}
 	
 	/**
@@ -199,7 +219,7 @@ public interface Query<T> {
 	}
 	
 	/**
-	 * 
+	 * field < ?
 	 * @author hanjiang.Yue
 	 * @param field
 	 * @param value
@@ -207,6 +227,52 @@ public interface Query<T> {
 	 */
 	default Query<T> lt(String field,Object value){
 		return condition(field).condition(" <  ? ").addParam(value);
+	}
+	
+	/**
+	 * field <= ?
+	 * @author hanjiang.Yue
+	 * @param field
+	 * @param value
+	 * @return
+	 */
+	default Query<T> le(String field,Object value){
+		return condition(field).condition(" <=  ? ").addParam(value);
+	}
+	
+	/**
+	 * exists ()
+	 * @param sqlstr
+	 * @param params
+	 * @return
+	 */
+	default Query<T> exists(String sqlstr,Object...params){
+		return condition("EXISTS (").condition(sqlstr).condition(") ").addParams(params);
+	}
+	
+	/**
+	 * exists
+	 * @param query
+	 * @return
+	 */
+	default <En> Query<T> exists(Query<En> query){
+		return exists(query.getQueryBuilder().buildSelectSQL(), query.getParams().toArray());
+	}
+	
+	/**
+	 * exists
+	 * @param tableClass
+	 * @param consumer
+	 * @return
+	 */
+	default <En> Query<T> exists(Class<En> tableClass,Consumer<Query<En>> consumer ){
+		Query<En> query = getDbContext().createQuery(tableClass);
+		consumer.accept(query);
+		return exists(query.getQueryBuilder().buildSelectSQL(), query.getParams().toArray());
+	}
+	
+	default Query<T> not(){
+		return condition(" NOT ");
 	}
 	
 	/**
@@ -232,6 +298,7 @@ public interface Query<T> {
 	}
 	
 	
+	
 	/**
 	 * field = ?
 	 * @author hanjiang.Yue
@@ -243,6 +310,30 @@ public interface Query<T> {
 		return condition(field).condition(" = ? ").addParam(value);
 	}
 	
+	/**
+	 * field != ?
+	 * @param field
+	 * @param value
+	 * @return
+	 */
+	default Query<T> ne(String field,Object value){
+		return condition(field).condition(" != ? ").addParam(value);
+	}
+	
+	/**
+	 * and field != ? 
+	 * @param field
+	 * @param value
+	 * @return
+	 */
+	default Query<T> andNe(String field,Object value){
+		return and().ne(field, value);
+	}
+	
+	/**
+	 * 获取参数
+	 * @return
+	 */
 	List<Object> getParams();
 	
 	default Query<T> group(String group){
@@ -284,7 +375,27 @@ public interface Query<T> {
 		return this;
 	}
 	
-	<R> Query<T> in(String field,Class<R> tableClass,Consumer<Query<R>> query);
+	/**
+	 * in
+	 * @param field
+	 * @param tableClass
+	 * @param consumer
+	 * @return
+	 */
+	default <R> Query<T> in(String field,Class<R> tableClass,Consumer<Query<R>> consumer){
+		Query<R> query = getDbContext().createQuery(tableClass);
+		consumer.accept(query);
+		return in(field, query);
+	}
+	
+	
+	default <R> Query<T> in(String field,Query<R> query){
+		return condition(field).
+					condition(" IN (").
+					condition(query.getQueryBuilder().buildSelectSQL()).
+					condition(") ").
+					addParams(query.getParams().toArray());
+	}
 	
 	default <R> Query<T> andIn(String field,Class<R> tableClass,Consumer<Query<R>> query){
 		return and().in(field, tableClass, query);
@@ -292,11 +403,11 @@ public interface Query<T> {
 	
 	default Query<T> innerjoin(Class<?> table, String condition){
 		TableMapping<?> mapping = DbContext.findTableMapping(table);
-		return innerjoin(mapping.getTableName(), condition);
+		return innerjoin(mapping.getTableName(), condition).condition(" ");
 	}
 	
 	default Query<T> innerjoin(String table, String condition){
-		return condition(" INNER JOIN ").condition(table).on(condition);
+		return condition(" INNER JOIN ").condition(table).on(condition).condition(" ");
 	}
 	
 	default <R>  Query<T> leftjoin(String conditions){
@@ -306,10 +417,25 @@ public interface Query<T> {
 	default <R> Query<T> leftjoin(Class<R> tableClass, String condition){
 		TableMapping<R> mapping = DbContext.findTableMapping(tableClass);
 		return leftjoin(mapping.getTableName(), condition);
+	} 
+	
+	
+	default <R> Query<T> leftjoin(Class<R> tableClass,String asStr,String condition){
+		TableMapping<R> mapping = DbContext.findTableMapping(tableClass);
+		return leftjoin(mapping.getTableName(), asStr,condition);
 	}
 	
 	default Query<T> leftjoin(String table, String condition){
 		return condition(" LEFT JOIN ").condition(table).on(condition);
+	}
+	
+	default Query<T> leftjoin(String table,String asStr,String condition){
+		return condition(" LEFT JOIN ").
+				    condition(table).
+				    condition(" AS ").
+				    condition(asStr).
+				    condition(" ").
+				    on(condition);
 	}
 	
 	default Query<T> on(String condition){
@@ -325,7 +451,7 @@ public interface Query<T> {
 	 * @return
 	 */
 	default Query<T> limit(int pageNo, int pageSize){
-		return condition("LIMIT ? ,? ").addParams(pageNo,pageSize);
+		return condition("LIMIT ? , ? ").addParams(pageNo,pageSize);
 	}
 	
 	
@@ -612,7 +738,7 @@ public interface Query<T> {
 	}
 	
 	default Query<T> having(String having){
-		return this;
+		return condition("HAVING ").condition(having).condition(" ");
 	}
 
 	default Query<T> count(String count){

@@ -109,17 +109,6 @@ public abstract class AbstractSupportQueryImpl<T> implements Query<T>,QueryBuild
 		return this;
 	}
 
-	@Override
-	public <R> Query<T> and(String sql, Class<R> tableClass, Consumer<Query<R>> consumer) {
-		Query<R> query = DbContext.createQuery(tableClass, config);
-		consumer.accept(query);
-		this.sqlBuilder
-			   .append(" (")
-			   .append(query.getQueryBuilder().buildSelectSQL())
-			   .append(") ");
-		this.params.addAll(query.getParams());
-		return this;
-	}
 
 
 	@Override
@@ -471,17 +460,6 @@ public abstract class AbstractSupportQueryImpl<T> implements Query<T>,QueryBuild
 		return this;
 	}
 	
-	@Override
-	public <R> Query<T> in(String field, Class<R> tableClass, Consumer<Query<R>> query) {
-		Query<R> tableQuery = DbContext.createQuery(tableClass, config);
-		query.accept(tableQuery);
-		condition(field);
-		condition(" IN (");
-		condition(tableQuery.getQueryBuilder().buildSelectSQL());
-		condition(") ");
-		addParams(tableQuery.getParams().toArray());
-		return this;
-	}
 	
 	@Override
 	public void release() {

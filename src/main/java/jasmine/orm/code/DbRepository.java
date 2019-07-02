@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import jasmine.orm.db.DbOperation;
 import jasmine.orm.db.DbOperationAdapter;
 import jasmine.orm.db.adapter.DeleteBatchDbOperationAdapter;
 import jasmine.orm.db.adapter.DeleteByIdDbOperationAdapter;
@@ -62,6 +63,15 @@ public interface DbRepository<M,Id> {
 	 */
 	DbContext dbContext();
 	
+	
+	/**
+	 * db 查询原生sql
+	 * @return
+	 */
+	default DbOperation db() {
+		return dbContext().getDbOperation();
+	}
+	
 	/**
 	 * 创建query执行对象
 	 * @author hanjiang.Yue
@@ -87,7 +97,7 @@ public interface DbRepository<M,Id> {
 	 * @return
 	 */
 	default <T> T call(String call,Consumer<CallableStatement> callableStatementConsumer,Function<ResultSet,T> resultSetFun) {
-		return dbContext().getDbOperation().prepareCall(call, callableStatementConsumer, resultSetFun);
+		return db().prepareCall(call, callableStatementConsumer, resultSetFun);
 	}
 	
 	/**
@@ -510,41 +520,6 @@ public interface DbRepository<M,Id> {
 		return execute(new UpdateEntityMapDbOperationAdapter<>(dbContext(), createQuery(), modelMap));
 	}
 	
-	/**
-	 * 更新并且返回数据
-	 * @author hanjiang.Yue
-	 * @param modelMap
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	default M updateMerge(Map<String, Object> modelMap) {
-		TableMapping<M> mapping = DbContext.findTableMapping(modelClass());
-		Id id = (Id) modelMap.get(mapping.getPrimaryKey());
-		//更新
-		update(modelMap);
-		return find(id);
-	}
-	
-	
-	/**
-	 * 添加或者新镇
-	 * @author hanjiang.Yue
-	 * @param model
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	default M saveOrUpdateMerge(M model) {
-		TableMapping<M> mapping = DbContext.findTableMapping(modelClass());
-		Map<String, Object> entityToMap = EntityUtils.entityToMap(model);
-		Id id = null;
-		if(entityToMap.containsKey(mapping.getPrimaryKey())) {
-			id = (Id) entityToMap.get(mapping.getPrimaryKey());
-			update(entityToMap);
-		}else {
-			id = save(model);
-		}
-		return find(id);
-	}
 	
 	/**
 	 * 
@@ -566,16 +541,17 @@ public interface DbRepository<M,Id> {
 		return id;
 	}
 	
+	
 	default Query<M> select(String...fields){
 		return createQuery().select(fields);
 	}
 	
 	default int execute(String sql,Object...params) {
-		return dbContext().getDbOperation().update(sql, params);
+		return db().update(sql, params);
 	}
 	
 	default <T> List<T> executeQuery(String sql,Function<ResultSet, T> fun,Object...params) {
-		 return dbContext().getDbOperation().execute(sql, fun, params);
+		 return db().execute(sql, fun, params);
 	}
 	
 	

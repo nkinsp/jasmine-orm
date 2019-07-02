@@ -16,6 +16,7 @@ public class BeanHandler<T> extends BeanListHandler<T>{
 
 	private Class<? extends T> typeClass;
 	
+	
 	public BeanHandler(Class<? extends T> type) {
 		super(type);
 		this.typeClass = type;

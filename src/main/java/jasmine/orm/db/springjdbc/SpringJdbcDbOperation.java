@@ -120,8 +120,6 @@ public class SpringJdbcDbOperation implements DbOperation{
 			}
 		}, keyHolder);
 		
-		
-		
 		if(idClass == int.class || idClass == Integer.class) {
 			return (T) new Integer(keyHolder.getKey().intValue());
 		}

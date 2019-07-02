@@ -21,32 +21,46 @@ import jasmine.orm.table.TableMapping;
 
 public class BeanRowMapper<T> extends BeanPropertyRowMapper<T>{
 
-	private Log log = LogFactory.getLog(getClass());
+	private static Log log = LogFactory.getLog(BeanRowMapper.class);
 	
-
+	private TableMapping<T> tableMapping;
+	
+	private Class<T> entityClass;
 
 
 	public BeanRowMapper(Class<T> entityClass) {
-		super.setMappedClass(entityClass);
+		this.entityClass = entityClass;
+		Table table = entityClass.getAnnotation(Table.class);
+		if(table == null) {
+			super.setMappedClass(entityClass);
+		}else {
+			this.tableMapping = DbContext.findTableMapping(entityClass);
+		}
+		
+	
 	}
 
 
 
 	@Override
 	public T mapRow(ResultSet rs, int rowNum) throws SQLException {
-		
-		Class<T> mappedClass = getMappedClass();
-		if(mappedClass.getAnnotation(Table.class) == null) {
+
+		if(tableMapping == null) {
 			return super.mapRow(rs, rowNum);
 		}
-		return getResultObject(rs, mappedClass);
+		return getResultObject(rs, entityClass);
 	}
 
 
 
-
+	/**
+	 * 构建对象
+	 * @param rs
+	 * @param mappedClass
+	 * @return
+	 * @throws SQLException
+	 */
 	private T getResultObject(ResultSet rs, Class<T> mappedClass) throws SQLException {
-		TableMapping<T> tableMapping = DbContext.findTableMapping(mappedClass);
 		T mappedObject = BeanUtils.instantiateClass(mappedClass);
 		BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(mappedObject);
 		ResultSetMetaData metaData = rs.getMetaData();

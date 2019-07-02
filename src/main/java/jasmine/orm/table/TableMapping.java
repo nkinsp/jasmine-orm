@@ -85,7 +85,7 @@ public class TableMapping<T> {
 		Table table = tableClass.getAnnotation(Table.class);
 		//没有@Table 注解
 		if(table == null) {
-			throw new NotFoundTableException("Not Found Table Class"+this.tableClass);
+			throw new NotFoundTableException("Not Found @Table Class"+this.tableClass);
 		}
 		this.tableName = table.name();
 		this.primaryKey = table.id();
