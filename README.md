@@ -29,7 +29,7 @@ public DbContext dbContext( class=""DataSource dataSource) {
 ```
 # CRUD操作
 #### 使用方式
-```
+```java
 @Repository
 public class UserRepository extends SpringJdbcTemplate<User, Integer>{
 
@@ -37,7 +37,7 @@ public class UserRepository extends SpringJdbcTemplate<User, Integer>{
 
 ```
 ### ActiveRecord
-```
+```java
 @Table
 public class User  extends ActiveRecord<User, Integer>{
 	
@@ -52,17 +52,17 @@ public class User  extends ActiveRecord<User, Integer>{
 }
 ```
 ### 直接使用
-```
-	@Autowired
-	private DbContext dbContext;
+```java
+@Autowired
+private DbContext dbContext;
+
+public void test() {
 	
-	public void test() {
-		
-		dbContext.table(User.class);
-	}
+	dbContext.table(User.class);
+}
 ```
 ### 添加
-```
+```java
 /**
 * 批量添加
 * @param models 插入的实体列表 所有的实体 字段个数 要保持一致
@@ -82,7 +82,7 @@ Id save(M model);
 Id save(Map<String, Object> modelMap)；    
 ```
 ### 修改
-```
+```java
 /**
 *更新数据
 *@param consumer lambda Query对象 
@@ -106,7 +106,7 @@ int update(M model);
 int update(Map<String, Object> modelMap);
 ```
 ### 删除
-```
+```java
 /**
 * 条件删除
 * @param consumer lambda Query对象 
@@ -136,7 +136,7 @@ int delete(Id...ids);
 int delete(List<Id> ids);
 ```
 ### 查询
-```
+```java
 /**
 * 通过id获取
 * @param id
@@ -347,7 +347,7 @@ Page<M> findPage(Integer pageNo,Integer pageSize)；
 <T> Page<T> findPage(Integer pageNo,Integer pageSize,Class<T> entityClass,Consumer<Query<M>> consumer)；
 ```
 ### 其他操作
-```
+```java
 /**
 * 添加或者更新
 
@@ -386,7 +386,7 @@ int execute(String sql,Object...params);
 ```
 
 # Query 对象 条件构造器
-```
+```java
 
 
 /**
