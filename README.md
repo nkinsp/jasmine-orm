@@ -42,11 +42,8 @@ public class UserRepository extends SpringJdbcTemplate<User, Integer>{
 public class User  extends ActiveRecord<User, Integer>{
 	
 	private Integer id;
-	
 	private Integer age;
-	
 	private String name;
-	
 	//省略get set
 	
 }
@@ -110,28 +107,28 @@ int update(Map<String, Object> modelMap);
 /**
 * 条件删除
 * @param consumer lambda Query对象 
-* @return
+* @return 受影响行数
 */
 int delete(Consumer<Query<M>> consumer);
 
 /**
 * 通过主键删除
 * @param id
-* @return
+* @return 受影响行数
 */
 int delete(Id id);
 
 /**
 * 批量删除
 * @param ids
-* @return
+* @return 受影响行数
 */
 int delete(Id...ids);
 
 /**
 * 批量删除
 * @param ids
-* @return
+* @return 受影响行数
 */
 int delete(List<Id> ids);
 ```
@@ -358,7 +355,6 @@ Id saveOrUpdate(M model);
 
 /**
 * 执行存储过程
-
 * @param call
 * @param callableStatementConsumer
 * @param resultSetFun
@@ -370,7 +366,7 @@ Id saveOrUpdate(M model);
 * 执行sql 操作
 * @param sql
 * @param params
-* @return
+* @return 受影响行数
 */
 int execute(String sql,Object...params);
 
@@ -388,258 +384,196 @@ int execute(String sql,Object...params);
 # Query 对象 条件构造器
 ```java
 
-
-/**
-* 添加参数
-
-* @param param
-* @return
-*/
-Query<T> addParam(Object param);
-
-/**
-* 添加参数 
-
-* @param params
-* @return
-*/
-Query<T> addParams(Object...params);
-
 /**
 * AND 
-
-* @return
 */
 Query<T> and();
 
 /**
 * AND condition ({sql })
-
 * @param sql
-* @param clasz 
+* @param tableClass 
 * @param consumer
-* @return
 */
 <R> Query<T> and(String condition, Class<R> tableClass, Consumer<Query<R>> consumer);
 
-
 /**
 * AND condition ?
-
 * @param condition
 * @param params
-* @return
 */
 Query<T> and(String condition, Object...params);
 
 /**
 * AND field = ? 
-
 * @param field
 * @param value
-* @return
 */
 Query<T> andEq(String field, Object value);
 
 /**
 * AND field > ?
-
 * @param field
 * @param value
-* @return
 */
- Query<T> andGt(String field, Object value);
+Query<T> andGt(String field, Object value);
 
 /**
 * field > ?
-
 * @param field
 * @param value
-* @return
 */
- Query<T> gt(String field, Object value);
+Query<T> gt(String field, Object value);
 
 /**
 * field >= ?
-
 * @param field
 * @param value
-* @return
 */
- Query<T> ge(String field,Object value);
+Query<T> ge(String field,Object value);
 
 /**
-* AND field 
-
+* AND field IN (?,?,?) values 
 * @param field
 * @param values
-* @return
 */
- Query<T> andIn(String field, Object[] values);
+Query<T> andIn(String field, Object[] values);
 
 
 /**
 * AND (conditions)
-
 * @param consumer
-* @return
 */
- Query<T> and(Consumer<Query<T>> consumer);
-
-
+Query<T> and(Consumer<Query<T>> consumer);
 
 /**
-* 
-
+* AND LIKE ? 
 * @param field
 * @param value
-* @return
 */
- Query<T> andLike(String field, Object value);
+Query<T> andLike(String field, Object value);
 
 /**
-* 
-
+* LIKE ? 
 * @param field
 * @param value
-* @return
 */
- Query<T> like(String field,Object value);
+Query<T> like(String field,Object value);
 
 /**
-* 
-
+* AND field < ?
 * @param field
 * @param value
-* @return
 */
- Query<T> andLt(String field, Object value);
+Query<T> andLt(String field, Object value);
 
 /**
 * field < ?
-
 * @param field
 * @param value
-* @return
 */
- Query<T> lt(String field,Object value);
+Query<T> lt(String field,Object value);
 
 /**
 * field <= ?
-
 * @param field
 * @param value
-* @return
 */
- Query<T> le(String field,Object value);
+Query<T> le(String field,Object value);
 
 /**
-* exists ()
-* @param sqlstr
-* @param params
-* @return
+* exists ({sqlstr})
+* @param sqlstr sql语句
+* @param params 参数
 */
- Query<T> exists(String sqlstr,Object...params);
+Query<T> exists(String sqlstr,Object...params);
 
 /**
 * exists
 * @param query
-* @return
 */
- <En> Query<T> exists(Query<En> query);
+<En> Query<T> exists(Query<En> query);
 
 /**
 * exists
 * @param tableClass
 * @param consumer
-* @return
 */
- <En> Query<T> exists(Class<En> tableClass,Consumer<Query<En>> consumer );
+<En> Query<T> exists(Class<En> tableClass,Consumer<Query<En>> consumer );
 
- Query<T> not();
+/**
+* NOT 
+*/
+Query<T> not();
 
 /**
 * AND field NOT IN (?,?,?)
-
 * @param field
 * @param values
-* @return
 */
- Query<T> andNotIn(String field, Object...values);
+Query<T> andNotIn(String field, Object...values);
 
 /**
 *  field not in (?,?,?) 
-
 * @param field
 * @param values
-* @return
 */
- Query<T> notIn(String field,Object...values);
-
-
+Query<T> notIn(String field,Object...values);
 
 /**
 * field = ?
-
 * @param field
 * @param value
-* @return
 */
- Query<T> eq(String field, Object value);
+Query<T> eq(String field, Object value);
 
 /**
 * field != ?
 * @param field
 * @param value
-* @return
 */
- Query<T> ne(String field,Object value);
+Query<T> ne(String field,Object value);
 
 /**
 * and field != ? 
 * @param field
 * @param value
-* @return
 */
- Query<T> andNe(String field,Object value);
+Query<T> andNe(String field,Object value);
+
 
 /**
-* 获取参数
-* @return
+* GROUP BY {group}
 */
-List<Object> getParams();
-
- Query<T> group(String group);
+Query<T> group(String group);
 
 /**
 * id = ?
-
 * @param value
 * @return
 */
- Query<T> idEq(Object value);
+Query<T> idEq(Object value);
 
 
 /**
 * field IN (?,?)
-
 * @param field
 * @param values
 * @return
 */
- Query<T> in(String field, Object...values)
+Query<T> in(String field, Object...values)
 
 /**
-* in
+* field IN ()
 * @param field
 * @param tableClass
 * @param consumer
 * @return
 */
- <R> Query<T> in(String field,Class<R> tableClass,Consumer<Query<R>> consumer)
+<R> Query<T> in(String field,Class<R> tableClass,Consumer<Query<R>> consumer)
 
 
- <R> Query<T> in(String field,Query<R> query);
+<R> Query<T> in(String field,Query<R> query);
 
  <R> Query<T> andIn(String field,Class<R> tableClass,Consumer<Query<R>> query);
 
@@ -703,159 +637,121 @@ Query<T> select(List<String> fields);
  Query<T> select(String field);
 
 /**
-
+* 需要查询的字段
 * @param fields
-* @return
 */
- Query<T> select(String...fields);
+Query<T> select(String...fields);
 
 /**
-* 查询 
-
+*  查询 
 * @param alias 别名
 * @param fields 字段名称
-* @return
 */
- Query<T> select(String alias,List<String> fields);
+Query<T> select(String alias,List<String> fields);
 
 /**
 * 不需要查询的列名
-
 * @param fields
-* @return
 */
 Query<T> selectExcludes(String...fields);
 
 /**
-* 更新的字段
-
+*  更新的字段
 * @param fields
-* @return
 */
 Query<T> set(Map<String, Object> fields);
 
 /**
 * 更新字段
-
 * @param t
-* @return
 */
 Query<T> set(T t);
 
 /**
-* 更新的字段
-
+*  更新的字段
 * @param field
 * @param value
-* @return 
 */
 Query<T> set(String field, Object value);
 
 /**
-* 更新字段 ex (set age = (age + ?) )  .. 1
+*  更新字段 ex (set age = (age + ?) )  .. 1
 * @param field
 * @param sql
 * @param params
-* @return
 */
 Query<T> setSQLStr(String field,String sql,Object...params);
 
 /**
 * 批量更新或者新增的数据
-
 * @param batch
-* @return
 */
 Query<T> batch(List<Map<String, Object>> batch);
 
 /**
-*  Table AS alias
-
+* Table AS alias
 * @param alias
-* @return
 */
- Query<T> alias(String alias);
+Query<T> alias(String alias);
 
 /**
 * 构建一个空的 where
-
-* @return
 */
 Query<T> where();
 
 
 /**
 *  where 
-
 * @param condition
 * @param params
 * @return
 */
- Query<T> where(String condition, Object...params);
+Query<T> where(String condition, Object...params);
 
 <R> Query<T> where(String condition,Class<R> tableClass,Consumer<Query<R>> where);
 
-
-
 /**
 * where map
-
 * @param whereMap
-* @return
 */
- Query<T> where(Map<String, Object> whereMap);
+Query<T> where(Map<String, Object> whereMap);
 
 /**
 * id in (?,?,?)
-
 * @param ids
-* @return
 */
- Query<T> idIn(Object...ids);
- <R> Query<T> idIn(Class<R> tableClass,Consumer<Query<R>> query);
+Query<T> idIn(Object...ids);
 
- Query<T> between(String field,Object start,Object end);
+<R> Query<T> idIn(Class<R> tableClass,Consumer<Query<R>> query);
 
- Query<T> andBetween(String field,Object start,Object end);
- Query<T> isNull(String field);
+Query<T> between(String field,Object start,Object end);
 
- Query<T> isNotNull(String field);
- Query<T> andIsNotNull(String field);
+Query<T> andBetween(String field,Object start,Object end);
+Query<T> isNull(String field);
 
- Query<T> andIsNull(String field);
+Query<T> isNotNull(String field);
+Query<T> andIsNotNull(String field);
 
- Query<T> andThen(boolean eq,Consumer<Query<T>> query);
+Query<T> andIsNull(String field);
 
+Query<T> andThen(boolean eq,Consumer<Query<T>> query);
 
- Query<T> andNotEmptyThen(Object value,Consumer<Query<T>> query);
+Query<T> andNotEmptyThen(Object value,Consumer<Query<T>> query);
 
-/**
-* 是否缓存
-* @return
-*/
-boolean isCache();
+Query<T> cache();
 
-String  getCacheKey();
+Query<T> cache(String key,long second);
 
-String  getCacheKey(String value);
+Query<T> cache(String key);
 
-long getCacheTime();
+Query<T> cache(long second);
 
- Query<T>  cache();
+Query<T> having(String having);
 
-Query<T>  cache(String key,long second);
+Query<T> count(String count);
 
- Query<T>  cache(String key);
+Query<T> or(String orStr);
 
-
- Query<T>  cache(long second);
-
- Query<T> having(String having);
-
- Query<T> count(String count);
-
- Query<T> or(String orStr);
-
- Query<T> or(Consumer<Query<T>> query);
+Query<T> or(Consumer<Query<T>> query);
 ```
 
