@@ -3,7 +3,7 @@
 # 特性
 
 * **强大的 CRUD** 内置操作操作模板 可实现大部分的curd 操作
-* **支持多种数据库** MySQL、MariaDB、Oracle、DB2,SQLSERVER2012 ,SQLite
+* **支持多种数据库** MySQL、MariaDB、Oracle、DB2,SQLSERVER2012 ,SQLite,H2
 * **支持主键自动生成** 支持多达 4 种主键策略（内含分布式唯一 ID 生成器 - Sequence），可自由配置，完美解决主键问题
 * **支持 ActiveRecord 模式** 支持 ActiveRecord 形式调用，实体类只需继承 Model 类即可进行强大的 CRUD 操作
 * **无xml** 没有xml文件 无需扫描
@@ -11,9 +11,9 @@
 * **内置分页**
 * **内置缓存操作** HashMap ,J2ECache,Redis 等 可以自定义缓存
 
-# 快速开始
+# 使用方式
 
-#### 使用方式
+#### 在springboot 中使用
 
 ```java
 @Bean
@@ -21,20 +21,51 @@ public DbContext dbContext( class=""DataSource dataSource) {
 	return new DbContext(dataSource);
 }
 ```
-#### 在spring mvc 中使用
+#### 在springmvc 中使用
 ```xml
 <bean id="dbContext" class="jasmine.orm.code.DbContext">
 	<property name="dataSource" ref="dataSource"></property>
 </bean>
 ```
 # CRUD操作
-#### 使用方式
+#### 传统Dao 使用方式
 ```java
+@Table
+public class User{
+	
+	private Integer id;
+	private Integer age;
+	private String name;
+	//省略get set
+}
 @Repository
 public class UserRepository extends SpringJdbcTemplate<User, Integer>{
 
 }
 
+//查询单个对象 select id,age,name from user where id = ? [100]
+User user = userRepository.find(100);
+//多个查询 select id,age,name from user where id in (?,?,?) [100,100]
+List<User> users = userRepository.findList(100,100);
+//条件查询 select id,age,name from user where age > ? [18]
+List<User> users = userRepository.findList(1, 20, query->query.where().gt("age", 18));
+
+//添加数据
+Integer id = userRepository.save(new User(20, "李四"));
+//批量添加数据
+userRepository.save(Arrays.asList(
+	new User(20, "李四"),
+	new User(25, "张三"),
+	new User(20, "王五")
+));
+
+//删除
+userRepository.delete(100);
+//批量删除
+userRepository.delete(100,101,102);
+
+//更新
+userRepository.update(user);
 ```
 ### ActiveRecord
 ```java
@@ -133,6 +164,26 @@ int delete(Id...ids);
 int delete(List<Id> ids);
 ```
 ### 查询
+
+* [find](#find)
+* [findMap](#findMap)
+* [findMapList](#findMapList)
+* [findList](#findList)
+* [findAll](#findAll)
+* [findUnique](#findUnique)
+* [findUniqueList](#findUniqueList)
+* [findToDouble](#findToDouble)
+* [findToInteger](#findToInteger)
+* [findToLong](#findToLong)
+* [findToString](#findToString)
+* [findStringList](#findStringList)
+* [findIntegerList](#findIntegerList)
+* [findLongList](#findLongList)
+* [findDoubleList](#findDoubleList)
+
+
+### find ###
+
 ```java
 /**
 * 通过id获取
@@ -142,19 +193,52 @@ int delete(List<Id> ids);
 M find(Id id);
 
 /**
+* 条件查询 返回实体对象
+* @param  consumer lambda Query对象 
+* @return
+*/
+M find(Consumer<Query<M>> consumer);
+
+/**
+*  条件查询 返回实体对象
+* @param enClass 实体对象的class
+* @param query consumer  lambda Query对象 
+* @return
+*/
+<En> En find(Class<En> enClass,Consumer<Query<M>> consumer)；
+
+/**
+*  根据Map 生成条件  key=? and key=?
+* @param queryMap
+* @return
+*/
+M find(Map<String, Object> queryMap)；
+
+```
+
+### findMap ###
+
+```java
+/**
 * 条件查询返回Map
 * @param consumer lambda Query对象 
 * @return Map
 */
 Map<String, Object> findMap(Consumer<Query<M>> consumer)；
 
+```
+### findMapList ###
+```java
 /**
 * 条件查询返回多个Map对象
 * @param consumer lambda Query对象 
 * @return List<Map>
 */
 List<Map<String, Object>> findMapList(Consumer<Query<M>> consumer);
+```
+### findList ###
 
+```java
 /**
 * 通过主键批量获取
 * @param ids
@@ -168,12 +252,6 @@ List<M> findList(Id...ids);
 * @return
 */
 List<M> findList(List<Id> ids);
-
-/**
-* 获取所有数据
-* @return
-*/
-List<M> findAll();
 
 /**
 * 分页查询
@@ -203,31 +281,7 @@ List<M> findList(Integer pageNo,Integer pageSize);
 <En> List<En> findList(Integer pageNo,Integer pageSize,Class<En> enClass,Consumer<Query<M>> consumer);
 
 /**
-* 条件查询 返回实体对象
-* @param  consumer lambda Query对象 
-* @return
-*/
-M find(Consumer<Query<M>> consumer);
-
-/**
-* 条件查询 返回实体对象
-* @param enClass 实体对象的class
-* @param query consumer  lambda Query对象 
-* @return
-*/
-<En> En find(Class<En> enClass,Consumer<Query<M>> consumer)；
-
-/**
-* 根据Map 生成条件  key=? and key=?
-* @param queryMap
-* @return
-*/
-M find(Map<String, Object> queryMap)；
-
-
-
-/**
-* 返回列表数据
+*  返回列表数据
 * @param consumer lambda Query对象 
 * @return
 */
@@ -240,8 +294,17 @@ List<M> fndList(Consumer<Query<M>> consumer);
 * @return
 */
 <T> List<T> findList(Class<T> enClass,Consumer<Query<M>> consumer)；
-
-
+```
+### findAll ###
+```java
+/**
+* 获取所有数据
+* @return
+*/
+List<M> findAll();
+```
+### findUnique ###
+```java
 /**
 * 返回唯一数据
 * @param typeClass
@@ -249,7 +312,9 @@ List<M> fndList(Consumer<Query<M>> consumer);
 * @return
 */
 <T> T findUnique(Class<T> typeClass,Consumer<Query<M>> consumer)；
-
+```
+### findUniqueList ###
+```java
 /**
 * 返回唯一的列表数据
 * @param typeClass
@@ -257,21 +322,53 @@ List<M> fndList(Consumer<Query<M>> consumer);
 * @return
 */
 <T> List<T> findUniqueList(Class<T> typeClass,Consumer<Query<M>> consumer)；
-
+```
+### findToDouble ###
+```java
+/**
+* 返回单个 Double 对象
+* @param consumer
+* @return
+*/
+Integer findToDouble(Consumer<Query<M>> consumer);
+```
+### findToInteger ###
+```java
 /**
 * 返回单个 Integer 对象
 * @param consumer
 * @return
 */
-Integer findToInt(Consumer<Query<M>> consumer);
-
+Integer findToInteger(Consumer<Query<M>> consumer);
+```
+### findToLong ###
+```java
 /**
 * 返回单个 Long 对象
 * @param consumer
 * @return
 */
 Long findToLong(Consumer<Query<M>> consumer)；
-
+```
+### findToString ###
+```java
+/**
+* 返回单个 String 对象
+* @param consumer
+* @return
+*/
+String findToString(Consumer<Query<M>> consumer)；
+```
+### findStringList ###
+```java
+/**
+* 返回 List<String>
+* @param consumer
+* @return
+*/
+List<String> findStringList(Consumer<Query<M>> consumer)；
+```
+```java
 /**
 * findCount
 * @param query
@@ -279,19 +376,9 @@ Long findToLong(Consumer<Query<M>> consumer)；
 */
 Integer findCount(Consumer<Query<M>> consumer)；
 
-/**
-* 返回单个 String 对象
-* @param consumer
-* @return
-*/
-String findToString(Consumer<Query<M>> consumer)；
 
-/**
-* 返回 List<String>
-* @param consumer
-* @return
-*/
-List<String> findStringList(Consumer<Query<M>> consumer)；
+
+
 
 /**
 * 返回 List<Integer>
@@ -718,7 +805,7 @@ Query<T> where(Map<String, Object> whereMap);
 
 /**
 * id in (?,?,?)
-* @param ids
+* @param ids 主键id
 */
 Query<T> idIn(Object...ids);
 
