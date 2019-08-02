@@ -4,8 +4,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 import jasmine.orm.cache.CacheOperation;
@@ -20,10 +18,6 @@ public class SimpleHashMapCacheOperation implements CacheOperation{
 	
 	private final Map<String, Cache>  cache;
 	
-	private Timer timer = new Timer();
-	
-	private boolean isRefresh = false; 
-	
 	
 	public SimpleHashMapCacheOperation(int cacheSize) {
 		cache = new LinkedHashMap<String,Cache>() {
@@ -36,36 +30,12 @@ public class SimpleHashMapCacheOperation implements CacheOperation{
 				return cache.size() >= cacheSize;
 			}
 		};
-		timer.schedule(new TimerTask() {
-			@Override
-			public void run() { 
-				if(!isRefresh) {
-					refresh();
-				}
-			}
-		}, 1000, 5000);
 	}
 	
 	public SimpleHashMapCacheOperation() {
 		this(100000);
 	}
 
-
-	/**
-	 * 刷新缓存
-	 * @author hanjiang.Yue
-	 */
-	private void refresh() {
-		
-		isRefresh = true;
-		long currentTimeMillis = System.currentTimeMillis();
-		cache.forEach((k,v)->{
-			if(v.timeOut > 0 &&  v.timeOut <= currentTimeMillis) {
-				cache.remove(k);
-			}
-		});
-		isRefresh = false;
-	}
 	
 	
 	class Cache {
@@ -115,6 +85,13 @@ public class SimpleHashMapCacheOperation implements CacheOperation{
 	public <T>  T get(Class<T> typeClass, String cacheKey) {
 		Cache value = cache.get(cacheKey);
 		if(value != null) {
+			synchronized (value) {
+				long currentTimeMillis = System.currentTimeMillis();
+				if(value.getTimeOut() < currentTimeMillis) {
+					this.delete(cacheKey);
+					return null;
+				}
+			}
 			return (T) value.getValue();
 		}
 		return null;
@@ -164,6 +141,14 @@ public class SimpleHashMapCacheOperation implements CacheOperation{
 	public <T> List<T> list(Class<T> type, String cacheKey) {
 		Cache cacheData = cache.get(cacheKey);
 		if(cacheData != null) {
+			synchronized (cacheData) {
+				long currentTimeMillis = System.currentTimeMillis();
+				if(cacheData.getTimeOut() > currentTimeMillis) {
+					this.delete(cacheKey);
+					return null;
+				}
+				
+			}
 			return (List<T>) cacheData.getValue();
 		}
 		return null;
