@@ -21,7 +21,7 @@ public class OracleIdentityPrimaryKeyGenerated extends DefaultPrimaryKeyGenerate
 		if(mapping.getIdType() == IdType.AUTO) {
 			String keySequence = mapping.getKeySequence();
 			if(StrUtils.isEmpty(keySequence)) {
-				throw new RuntimeException("Not Found  @KeySequence");
+				return new Field(mapping.getPrimaryKey(), "sequence_id.nextval", FieldType.SQL_STRING);
 			}
 			return new Field(mapping.getPrimaryKey(), keySequence, FieldType.SQL_STRING);
 		}
