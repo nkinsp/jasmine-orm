@@ -299,8 +299,12 @@ public interface DbRepository<M,Id> {
 	 * @param query
 	 * @return
 	 */
-	default Integer findToInt(Consumer<Query<M>> query) {
-		return findUnique(Integer.class, query);
+	default Integer findToInteger(Consumer<Query<M>> consumer) {
+		return findUnique(Integer.class, consumer);
+	}
+	
+	default Double findToDouble(Consumer<Query<M>> consumer) {
+		return findUnique(Double.class, consumer);
 	}
 	
 	/**
@@ -322,7 +326,7 @@ public interface DbRepository<M,Id> {
 	default Integer findCount(Consumer<Query<M>> query) {
 		Query<M> createQuery = createQuery(q->{});
 		query.accept(createQuery);
-		return findToInt(e->{
+		return findToInteger(e->{
 			e.count("1");
 			String conditions = createQuery.getConditions();
 			int indexOf = conditions.toUpperCase().indexOf("ORDER BY");
@@ -559,6 +563,11 @@ public interface DbRepository<M,Id> {
 	}
 	
 	
+	/**
+	 * 
+	 * @param fields
+	 * @return
+	 */
 	default Query<M> select(String...fields){
 		return createQuery().select(fields);
 	}
