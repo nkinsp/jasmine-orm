@@ -17,7 +17,7 @@
 
 ```java
 @Bean
-public DbContext dbContext( class=""DataSource dataSource) {
+public DbContext dbContext(DataSource dataSource) {
 	return new DbContext(dataSource);
 }
 ```
