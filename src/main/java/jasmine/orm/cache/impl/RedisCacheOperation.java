@@ -1,6 +1,5 @@
 package jasmine.orm.cache.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -10,26 +9,28 @@ import java.util.stream.Collectors;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.RedisSerializer;
 
 import com.alibaba.fastjson.JSON;
 
 import jasmine.orm.cache.CacheOperation;
 import jasmine.orm.util.StrUtils;
 
+/**
+ *  redis 缓存操作
+ * @author hanjiang.Yue
+ *
+ */
+@SuppressWarnings("unchecked")
 public class RedisCacheOperation implements CacheOperation{
 
-	private StringRedisTemplate redisTemplate;
-	
+	private RedisTemplate<String,Object> redisTemplate;
+
 	@Override
 	public <T> T get(Class<T> typeClass, String cacheKey) {
-//		redisTemplate.opsForValue().
-		String vlaue = redisTemplate.opsForValue().get(cacheKey);
-		if(!StrUtils.isEmpty(vlaue)) {
-			return JSON.parseObject(vlaue, typeClass);
-		}
-		return null;
+		
+		return (T) redisTemplate.opsForValue().get(cacheKey);
 	}
 
 	@Override
@@ -47,7 +48,7 @@ public class RedisCacheOperation implements CacheOperation{
 
 	@Override
 	public void put(String cacheKey, long expiryTime, Object value) {
-		redisTemplate.opsForValue().set(cacheKey, serialize(value), expiryTime,TimeUnit.SECONDS);
+		redisTemplate.opsForValue().set(cacheKey, value, expiryTime,TimeUnit.SECONDS);
 		
 	}
 
@@ -64,35 +65,29 @@ public class RedisCacheOperation implements CacheOperation{
 
 	@Override
 	public <T> List<T> list(Class<T> type, Collection<String> keys) {
-		return redisTemplate.
+		return (List<T>) redisTemplate.
 				opsForValue().
 				multiGet(keys).
 				stream().
 				filter(data->!StrUtils.isEmpty(data)).
-				map(data->deserialize(type,data)).
 				collect(Collectors.toList());
 	}
 
 	@Override
 	public <T> List<T> list(Class<T> type, String cacheKey) {
-		String value = redisTemplate.opsForValue().get(cacheKey);
-		if(!StrUtils.isEmpty(value)) { 
-			 List<T> list = JSON.parseArray(value, type);
-			 return list == null?new ArrayList<>():list;
-		}
-		return new ArrayList<>();
+		return (List<T>) redisTemplate.opsForValue().get(cacheKey);
 	}
 
 
 	@Override
 	public void put(Map<String, Object> elements, long expiryTime) {
-		
+		RedisSerializer<String> keySerializer = (RedisSerializer<String>) redisTemplate.getKeySerializer();
+		RedisSerializer<Object> valueSerializer = (RedisSerializer<Object>) redisTemplate.getValueSerializer();
 		redisTemplate.executePipelined(new RedisCallback<Object>() {
 			@Override
 			public Object doInRedis(RedisConnection connection) throws DataAccessException {
-				StringRedisSerializer serializer = new StringRedisSerializer();
 				elements.forEach((key,value)->{
-					connection.setEx(serializer.serialize(key), expiryTime,serializer.serialize(value.toString()));
+					connection.setEx(keySerializer.serialize(key), expiryTime,valueSerializer.serialize(value));
 				});
 				return null;
 			}
@@ -101,7 +96,7 @@ public class RedisCacheOperation implements CacheOperation{
 	}
 
 
-	public RedisCacheOperation(StringRedisTemplate redisTemplate) {
+	public RedisCacheOperation(RedisTemplate<String,Object> redisTemplate) {
 		super();
 		this.redisTemplate = redisTemplate;
 	}

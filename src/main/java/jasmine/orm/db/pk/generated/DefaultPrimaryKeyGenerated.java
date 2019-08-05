@@ -6,6 +6,11 @@ import jasmine.orm.query.Field;
 import jasmine.orm.table.TableMapping;
 import jasmine.orm.util.IdWorkUtils;
 
+/**
+ * 生成主键类型
+ * @author hanjiang.Yue
+ *
+ */
 public class DefaultPrimaryKeyGenerated implements PrimaryKeyGenerated{
 	
 	@Override
@@ -16,7 +21,7 @@ public class DefaultPrimaryKeyGenerated implements PrimaryKeyGenerated{
 		}
 		if(idType == IdType.SEQUENCE) {
 			return new Field(mapping.getPrimaryKey(), IdWorkUtils.sequenceId());
-		}
+		}		
 		return null;
 	}
 

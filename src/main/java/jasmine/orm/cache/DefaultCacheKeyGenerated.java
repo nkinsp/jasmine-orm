@@ -3,6 +3,11 @@ package jasmine.orm.cache;
 import jasmine.orm.table.TableMapping;
 import jasmine.orm.util.MD5Utils;
 
+/**
+ * 缓存默认key的生成
+ * @author hanjiang.Yue
+ *
+ */
 public class DefaultCacheKeyGenerated implements CacheKeyGenerated{
 
 	@Override

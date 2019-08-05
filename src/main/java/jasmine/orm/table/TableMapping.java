@@ -12,8 +12,10 @@ import jasmine.orm.activerecord.MapActiveRecord;
 import jasmine.orm.annotation.Column;
 import jasmine.orm.annotation.KeySequence;
 import jasmine.orm.annotation.Table;
+import jasmine.orm.db.pk.PrimaryKeyGenerated;
 import jasmine.orm.enums.IdType;
 import jasmine.orm.exception.NotFoundTableException;
+import jasmine.orm.exception.PrimaryKeyGeneratedException;
 import jasmine.orm.util.ClassUtils;
 import jasmine.orm.util.StrUtils;
 
@@ -40,6 +42,12 @@ public class TableMapping<T> {
 	 * 主键名称
 	 */
 	private String primaryKey;
+	
+	/**
+	 * 主键生成规则
+	 */
+	private Class<? extends PrimaryKeyGenerated> primaryKeyGeneratedClass;
+	
 	/**
 	 * 实体字段对表字段的映射
 	 */
@@ -92,6 +100,7 @@ public class TableMapping<T> {
 		this.idType = table.idType();
 		this.cache = table.cache();
 		this.cacheTime = table.cacheTime();
+		this.setPrimaryKeyGeneratedClass(table.primaryKeyGenerated());
 		//默认使用类名
 		if(StrUtils.isEmpty(tableName)) {
 			this.tableName = StrUtils.humpToLine(tableClass.getSimpleName());
@@ -197,6 +206,7 @@ public class TableMapping<T> {
 		return fieldName;
 	}
 	
+	
 	public Class<T> getTableClass() {
 		return tableClass;
 	}
@@ -268,5 +278,15 @@ public class TableMapping<T> {
 
 	public void setKeySequence(String keySequence) {
 		this.keySequence = keySequence;
+	}
+
+
+	public Class<? extends PrimaryKeyGenerated> getPrimaryKeyGeneratedClass() {
+		return primaryKeyGeneratedClass;
+	}
+
+
+	public void setPrimaryKeyGeneratedClass(Class<? extends PrimaryKeyGenerated> primaryKeyGeneratedClass) {
+		this.primaryKeyGeneratedClass = primaryKeyGeneratedClass;
 	}
 }

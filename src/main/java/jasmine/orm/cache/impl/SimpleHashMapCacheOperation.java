@@ -16,17 +16,22 @@ import jasmine.orm.cache.CacheOperation;
 public class SimpleHashMapCacheOperation implements CacheOperation{
 
 	
+	/**
+	 * 缓存的map
+	 */
 	private final Map<String, Cache>  cache;
 	
 	
+	/**
+	 * @param cacheSize 缓存最大数
+	 */
 	public SimpleHashMapCacheOperation(int cacheSize) {
-		cache = new LinkedHashMap<String,Cache>() {
+		this.cache = new LinkedHashMap<String,Cache>() {
 
 			private static final long serialVersionUID = -7807878587778419878L;
 
 			@Override
 			protected boolean removeEldestEntry(java.util.Map.Entry<String, Cache> eldest) {
-				// TODO Auto-generated method stub
 				return cache.size() >= cacheSize;
 			}
 		};
@@ -38,48 +43,9 @@ public class SimpleHashMapCacheOperation implements CacheOperation{
 
 	
 	
-	class Cache {
-		
-		private Object value;
-		
-		private long timeOut = -1;
-
-		public Object getValue() {
-			return value;
-		}
-
-		public long getTimeOut() {
-			return timeOut;
-		}
-
-		public void setValue(Object value) {
-			this.value = value;
-		}
-
-		public void setTimeOut(long timeOut) {
-			this.timeOut = timeOut;
-		}
-
-		public Cache(Object value, long timeOut) {
-			super();
-			this.value = value;
-			if(timeOut > 0) {
-				this.timeOut = System.currentTimeMillis()+(timeOut*1000);
-			}
-			
-		}
-
-		public Cache(Object value) {
-			super();
-			this.value = value;
-		}
-		
-		
-		
-	}
 
 
-
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T>  T get(Class<T> typeClass, String cacheKey) {
@@ -91,8 +57,9 @@ public class SimpleHashMapCacheOperation implements CacheOperation{
 					this.delete(cacheKey);
 					return null;
 				}
+				return (T) value.getValue();
 			}
-			return (T) value.getValue();
+			
 		}
 		return null;
 	}
@@ -147,12 +114,13 @@ public class SimpleHashMapCacheOperation implements CacheOperation{
 					this.delete(cacheKey);
 					return null;
 				}
-				
+				return (List<T>) cacheData.getValue();
 			}
-			return (List<T>) cacheData.getValue();
+			
 		}
 		return null;
 	}
+
 
 
 
@@ -163,5 +131,51 @@ public class SimpleHashMapCacheOperation implements CacheOperation{
 		});
 	}
 
+	/**
+	 * 缓存
+	 */
+	class Cache {
+
+		/**
+		 * 缓存对象
+		 */
+		private Object value;
+
+		/**
+		 * 超时时间 单位秒
+		 */
+		private long timeOut = -1;
+
+		public Object getValue() {
+			return value;
+		}
+
+		public long getTimeOut() {
+			return timeOut;
+		}
+
+		public void setValue(Object value) {
+			this.value = value;
+		}
+
+		public void setTimeOut(long timeOut) {
+			this.timeOut = timeOut;
+		}
+
+		public Cache(Object value, long timeOut) {
+			super();
+			this.value = value;
+			if (timeOut > 0) {
+				this.timeOut = System.currentTimeMillis() + (timeOut * 1000);
+			}
+
+		}
+
+		public Cache(Object value) {
+			super();
+			this.value = value;
+		}
+
+	}
 
 }

@@ -19,7 +19,6 @@ import javax.sql.DataSource;
 public interface DbOperation {
 	
 	
-	
 
 	/**
 	 * 获取数据源

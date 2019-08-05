@@ -7,6 +7,7 @@ import java.util.Map;
  * 属性映射
  * @author hanjiang.Yue
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class Property {
 	
 	public static final int TYPE_BEAN = 0;
@@ -39,7 +40,6 @@ public class Property {
 	 * @param target
 	 * @return
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> T getValue(Object target) {
 		if(type == TYPE_MAP) {
 			Map map = (Map) target;
@@ -53,7 +53,7 @@ public class Property {
 		return null;
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+
 	public void setValue(Object target,Object value) {
 		if(type == TYPE_MAP) {
 			Map map = (Map) target;

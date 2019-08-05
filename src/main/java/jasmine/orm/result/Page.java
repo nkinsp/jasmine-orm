@@ -37,7 +37,6 @@ public class Page <M>{
 
 	public Page() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	

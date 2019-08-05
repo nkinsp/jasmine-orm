@@ -9,7 +9,5 @@ public enum IdType {
 
 	AUTO,
 	UUID,
-	SEQUENCE,
-	ORACLE_IDENTITY
-	
+	SEQUENCE
 }

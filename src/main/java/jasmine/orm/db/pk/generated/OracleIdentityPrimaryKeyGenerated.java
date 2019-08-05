@@ -10,7 +10,6 @@ import jasmine.orm.util.StrUtils;
 /**
  * Oracle 自增 id
  * @author hanjiang.Yue
- *
  */
 public class OracleIdentityPrimaryKeyGenerated extends DefaultPrimaryKeyGenerated{
 
@@ -21,7 +20,7 @@ public class OracleIdentityPrimaryKeyGenerated extends DefaultPrimaryKeyGenerate
 		if(mapping.getIdType() == IdType.AUTO) {
 			String keySequence = mapping.getKeySequence();
 			if(StrUtils.isEmpty(keySequence)) {
-				return new Field(mapping.getPrimaryKey(), "sequence_id.nextval", FieldType.SQL_STRING);
+				keySequence = "sequence_id.nextval";
 			}
 			return new Field(mapping.getPrimaryKey(), keySequence, FieldType.SQL_STRING);
 		}

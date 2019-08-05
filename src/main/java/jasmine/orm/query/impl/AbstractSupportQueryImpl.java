@@ -15,6 +15,7 @@ import jasmine.orm.code.DbConfig;
 import jasmine.orm.code.DbContext;
 import jasmine.orm.enums.FieldType;
 import jasmine.orm.enums.IdType;
+import jasmine.orm.exception.PrimaryKeyGeneratedException;
 import jasmine.orm.query.Field;
 import jasmine.orm.query.Query;
 import jasmine.orm.query.QueryBuilder;
@@ -280,9 +281,10 @@ public abstract class AbstractSupportQueryImpl<T> implements Query<T>,QueryBuild
 	public String buildInsertSQL() {
 		String pk = tableMapping.getPrimaryKey();
 		List<Field> fields = null;
+		//是否存在主键
 		if(!getFieldMap().containsKey(pk) ) {
 			fields = new ArrayList<>();
-			Field field = config.getPrimaryKeyGenerated().generated(tableMapping);
+			Field field = this.getPrimaryKeyGeneratedField();
 			if(field != null) {
 				fields.add(field);
 			}
@@ -295,7 +297,7 @@ public abstract class AbstractSupportQueryImpl<T> implements Query<T>,QueryBuild
 		fields.forEach(field->{
 			if(field.isTableField()) {
 				colMap.put(field.getName(), "?");
-				addParam(field.getValue());
+				this.addParam(field.getValue());
 			}else {
 				colMap.put(field.getName(), field.getValue().toString());
 			}
@@ -303,6 +305,21 @@ public abstract class AbstractSupportQueryImpl<T> implements Query<T>,QueryBuild
 		return getInsertSQL(colMap);
 	}
 	
+	
+	/**
+	 * 生成主键
+	 * @return
+	 */
+	private Field getPrimaryKeyGeneratedField() {
+		if(tableMapping.getPrimaryKeyGeneratedClass() != null) {
+			try {
+				return tableMapping.getPrimaryKeyGeneratedClass().newInstance().generated(tableMapping);
+			} catch (Exception e) {
+				throw new PrimaryKeyGeneratedException(e);
+			} 
+		}
+		return config.getPrimaryKeyGenerated().generated(tableMapping);
+	}
 	
 	
 	@Override
@@ -315,7 +332,7 @@ public abstract class AbstractSupportQueryImpl<T> implements Query<T>,QueryBuild
 			List<Object> param = new ArrayList<>();
 			if (tableMapping.getIdType() != IdType.AUTO) {
 				// 设置主键
-				Field id = dataMap.containsKey(pk)?dataMap.get(pk):config.getPrimaryKeyGenerated().generated(tableMapping);
+				Field id = dataMap.containsKey(pk)?dataMap.get(pk):this.getPrimaryKeyGeneratedField();
 				dataMap.put(pk, id);
 				if (id.isTableField()) {
 					param.add(id.getValue());
